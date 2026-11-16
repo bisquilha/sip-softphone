@@ -1,0 +1,18 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Build
+        run: dotnet build Softphone.sln -c Release
+      - name: SIP engine tests (simulated PBX on 127.0.0.1:5090, no sound card)
+        run: dotnet run --project src/Softphone.PabxTeste -c Release --no-build
