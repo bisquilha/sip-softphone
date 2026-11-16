@@ -1,0 +1,17 @@
+# Base de conhecimento do Softphone (modelo)
+
+Os arquivos .md ou .txt desta pasta (/opt/softphone/dados/conhecimento) entram no "manual" que a IA lê antes de
+resumir uma ligação ou sugerir uma resposta no chat. Este arquivo termina em .exemplo e por isso NÃO é lido.
+Para usar: copie para um nome .md (ex.: empresa.md) e troque o conteúdo. Não precisa reiniciar nada:
+o Hub relê a pasta quando um arquivo muda.
+
+Escreva só o que você quer que a IA use. NÃO coloque senhas, dados pessoais nem nada sigiloso
+(o texto vai para a API da Anthropic junto com a transcrição).
+
+## Ideias do que colocar
+
+- O que a empresa faz, produtos e linhas (nomes como os clientes falam).
+- Siglas e termos internos (ex.: OP, OC, PCP, TOTVS, Protheus) e o que significam.
+- Setores e quem cuida do quê (ex.: "orçamento de peça de reposição: setor de Assistência Técnica, ramal 2xx").
+- Respostas padrão: prazos usuais, horário de atendimento, como abrir chamado na TI (GLPI), endereço para entrega.
+- Tom das mensagens: formal com clientes, direto entre colegas.

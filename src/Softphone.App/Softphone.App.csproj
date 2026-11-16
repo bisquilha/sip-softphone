@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Só para o ícone da bandeja (NotifyIcon). -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Softphone.App</RootNamespace>
+    <AssemblyName>Softphone</AssemblyName>
+    <Product>Softphone</Product>
+    <Company>Minha Empresa Industrial</Company>
+    <Description>Softphone SIP da empresa</Description>
+    <Version>1.2.9</Version>
+    <ApplicationIcon>Assets\softphone.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\softphone.ico" />
+    <!-- aviso falado da gravação (voz Maria, 16 kHz): embutido para não depender da voz instalada em cada PC -->
+    <Resource Include="Assets\aviso-gravacao.wav" />
+    <None Remove="Assets\*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Padrões da TI (servidor do PABX etc.). Fica ao lado do .exe, fora do arquivo único, para poder editar. -->
+    <None Update="softphone.padrao.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Softphone.Core\Softphone.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.1" />
+  </ItemGroup>
+
+</Project>

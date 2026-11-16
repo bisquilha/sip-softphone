@@ -1,0 +1,178 @@
+<Window x:Class="Softphone.App.GravacoesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:Softphone.App"
+        Title="Gravações - Softphone" Width="940" Height="640" MinWidth="680" MinHeight="420"
+        Background="{DynamicResource BgWindow}" Foreground="{DynamicResource TextPrimary}"
+        FontFamily="Segoe UI" FontSize="13" Icon="Assets/softphone.ico" UseLayoutRounding="True">
+    <Window.Resources>
+        <DataTemplate x:Key="LinhaGravacao" DataType="{x:Type app:GravacaoVM}">
+            <Grid Margin="2,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="22" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Icone}" FontFamily="Segoe UI Symbol" FontSize="14" VerticalAlignment="Top" Margin="0,1,0,0" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="{Binding Titulo}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Linha2}" Foreground="{DynamicResource TextSecondary}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Linha3}" FontSize="12" TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ComErro}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource BadText}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="Fala" DataType="{x:Type app:FalaVM}">
+            <Grid Margin="0,3">
+                <Border CornerRadius="10" Padding="10,6" MaxWidth="520">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="HorizontalAlignment" Value="Left" />
+                            <Setter Property="Background" Value="{DynamicResource BgSurface}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Eu}" Value="True">
+                                    <Setter Property="HorizontalAlignment" Value="Right" />
+                                    <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondary}">
+                            <Run Text="{Binding Quem, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" · " /><Run Text="{Binding Quando, Mode=OneWay}" />
+                        </TextBlock>
+                        <TextBlock Text="{Binding Texto}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" MinWidth="220" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== lista ===== -->
+        <Border BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel Margin="14,12,14,6">
+                    <TextBlock Text="Ligações gravadas" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock x:Name="TxtRetencao" Foreground="{DynamicResource TextSecondary}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0" />
+                </StackPanel>
+                <ListBox x:Name="Lista" Grid.Row="1" Style="{StaticResource Lista}" ItemTemplate="{StaticResource LinhaGravacao}"
+                         SelectionChanged="Lista_SelectionChanged" KeyDown="Lista_KeyDown" />
+                <TextBlock x:Name="TxtVazio" Grid.Row="1" Text="Nenhuma ligação gravada. Durante uma chamada, use o botão Gravar." TextWrapping="Wrap"
+                           TextAlignment="Center" Foreground="{DynamicResource TextMuted}" Margin="20,40,20,0" Visibility="Collapsed" />
+                <Button Grid.Row="2" Style="{StaticResource BtnContorno}" HorizontalAlignment="Left" Margin="12,6,12,12" Click="Atualizar_Click" Content="Atualizar" />
+            </Grid>
+        </Border>
+
+        <!-- ===== detalhe ===== -->
+        <Grid Grid.Column="1" x:Name="Detalhe" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Border BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1" Padding="16,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock x:Name="TxtTitulo" FontSize="17" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="TxtInfo" Foreground="{DynamicResource TextSecondary}" FontSize="12" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button x:Name="BtnOuvir" Style="{StaticResource BtnContorno}" Margin="4,0,0,0" Click="Ouvir_Click" ToolTip="Ouvir a gravação">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="IconeOuvir" FontFamily="{StaticResource Icones}" Text="&#xE768;" Margin="0,1,6,0" />
+                                <TextBlock x:Name="TxtOuvir" Text="Ouvir" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource BtnIcone}" Margin="4,0,0,0" Content="&#xE74E;" Click="SalvarAudio_Click" ToolTip="Salvar o áudio (.wav)" />
+                        <Button Style="{StaticResource BtnIcone}" Margin="2,0,0,0" Content="&#xE8C8;" Click="CopiarTudo_Click" ToolTip="Copiar resumo e transcrição" />
+                        <Button x:Name="BtnTranscrever" Style="{StaticResource BtnContorno}" Margin="4,0,0,0" Click="Reprocessar_Click" Visibility="Collapsed"
+                                ToolTip="Transcrever esta ligação e fazer o resumo">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE8D2;" Margin="0,1,6,0" />
+                                <TextBlock Text="Transcrever" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnReprocessar" Style="{StaticResource BtnIcone}" Margin="2,0,0,0" Content="&#xE72C;" Click="Reprocessar_Click" ToolTip="Transcrever e resumir de novo" />
+                        <Button Style="{StaticResource BtnIcone}" Margin="2,0,0,0" Content="&#xE74D;" Click="Excluir_Click" ToolTip="Excluir esta gravação (Delete)" />
+                    </WrapPanel>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="16,12,16,16">
+                    <!-- andamento / erro -->
+                    <Border x:Name="CaixaStatus" Background="{DynamicResource WarnBg}" BorderBrush="{DynamicResource WarnBorder}" BorderThickness="1"
+                            CornerRadius="8" Padding="10,8" Margin="0,0,0,12" Visibility="Collapsed">
+                        <TextBlock x:Name="TxtStatus" Foreground="{DynamicResource WarnText}" TextWrapping="Wrap" />
+                    </Border>
+
+                    <!-- resumo da IA -->
+                    <StackPanel x:Name="PainelResumo" Visibility="Collapsed">
+                        <TextBlock x:Name="TxtAssunto" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock x:Name="TxtQuem" Foreground="{DynamicResource TextSecondary}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap" />
+                        <TextBlock x:Name="TxtResumo" TextWrapping="Wrap" Margin="0,8,0,0" LineHeight="19" />
+
+                        <TextBlock Text="Próximos passos" FontWeight="SemiBold" Margin="0,14,0,4" x:Name="TituloPassos" />
+                        <ItemsControl x:Name="ListaPassos">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="18" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE73E;" Foreground="{DynamicResource AccentText}" FontSize="11" Margin="0,3,0,0" />
+                                        <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Border x:Name="CaixaSugestao" Background="{DynamicResource BgSurface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1"
+                                CornerRadius="8" Padding="12,10" Margin="0,14,0,0">
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="Sugestão de retorno (rascunho da IA)" FontWeight="SemiBold" />
+                                    <Button Style="{StaticResource BtnContorno}" HorizontalAlignment="Right" Padding="8,2" FontSize="12" Content="Copiar" Click="CopiarSugestao_Click" />
+                                </Grid>
+                                <TextBox x:Name="TxtSugestao" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" Background="Transparent" Margin="-4,6,0,0" Padding="0" IsReadOnly="True" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock x:Name="TituloTranscricao" Text="Transcrição" FontWeight="SemiBold" Margin="0,18,0,6" />
+                    <ItemsControl x:Name="ListaFalas" ItemTemplate="{StaticResource Fala}" />
+                    <TextBlock x:Name="TxtSemFala" Text="Nada foi reconhecido nesta gravação." Foreground="{DynamicResource TextMuted}" Visibility="Collapsed" />
+                    <TextBlock Foreground="{DynamicResource TextMuted}" FontSize="11" TextWrapping="Wrap" Margin="0,16,0,0"
+                               Text="A transcrição é feita no servidor da empresa; só o texto vai para a IA que escreve o resumo. Confira os pontos importantes no áudio." />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+        <TextBlock x:Name="TxtEscolha" Grid.Column="1" Text="Escolha uma gravação na lista." Foreground="{DynamicResource TextMuted}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Grid>
+</Window>

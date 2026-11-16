@@ -1,0 +1,55 @@
+<Window x:Class="Softphone.App.EscolherPessoasWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:Softphone.App"
+        Title="Nova reunião" Width="420" Height="580" MinHeight="420" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource BgWindow}" Foreground="{DynamicResource TextPrimary}" FontFamily="Segoe UI" FontSize="13">
+    <!-- 1.1.3: escolher quem chamar para a reunião (nova, ou "Adicionar pessoas" com ela aberta), como no Teams -->
+    <Grid Margin="18,10,18,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="TxtExplica" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                   Text="Escolha quem chamar. O Softphone de quem estiver online toca na hora." />
+        <TextBlock Grid.Row="1" Style="{StaticResource Rotulo}" x:Name="TxtSelecionados" Text="Pessoas" />
+        <TextBox x:Name="CaixaBusca" Grid.Row="2" TextChanged="Busca_TextChanged" AutomationProperties.Name="Buscar por nome, ramal ou setor" />
+        <ListBox x:Name="Lista" Grid.Row="3" Style="{StaticResource Lista}" Margin="0,6,0,0" AutomationProperties.Name="Pessoas">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox IsChecked="{Binding Marcado}" Margin="0" Checked="Marcar_Changed" Unchecked="Marcar_Changed" VerticalContentAlignment="Center">
+                        <Grid Margin="4,1,0,1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Width="9" Height="9" VerticalAlignment="Center" app:Pincel.Recurso="{Binding Pessoa.CorPresenca}" ToolTip="{Binding Pessoa.TextoStatus}" />
+                            <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                <TextBlock Text="{Binding Pessoa.Nome}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Pessoa.Detalhe}" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                        </Grid>
+                    </CheckBox>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock x:Name="TxtErro" Grid.Row="4" Foreground="{DynamicResource BadText}" TextWrapping="Wrap" Margin="0,8,0,0" />
+        <Grid Grid.Row="5" Margin="0,10,0,0">
+            <Button x:Name="BtnOutlook" Style="{StaticResource BtnContorno}" HorizontalAlignment="Left" Click="Outlook_Click"
+                    ToolTip="Abre um compromisso novo no Outlook com as pessoas escolhidas e o link da reunião">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE787;" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBlock Text="Agendar no Outlook" />
+                </StackPanel>
+            </Button>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource BtnContorno}" Content="Cancelar" IsCancel="True" Margin="0,0,8,0" />
+                <Button x:Name="BtnOk" Style="{StaticResource BtnPrimario}" Content="Iniciar e chamar" IsDefault="True" Click="Ok_Click" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

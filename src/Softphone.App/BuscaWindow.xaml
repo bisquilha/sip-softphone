@@ -1,0 +1,44 @@
+<Window x:Class="Softphone.App.BuscaWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:Softphone.App"
+        Title="Buscar nas conversas - Softphone" Width="480" Height="560" MinWidth="360" MinHeight="300"
+        Background="{DynamicResource BgWindow}" Foreground="{DynamicResource TextPrimary}"
+        FontFamily="Segoe UI" FontSize="13" Icon="Assets/softphone.ico" UseLayoutRounding="True" WindowStartupLocation="CenterOwner">
+    <Border Padding="12">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <TextBox x:Name="Caixa" FontSize="14" KeyDown="Caixa_KeyDown" AutomationProperties.Name="Buscar" />
+            <TextBlock x:Name="Dica" Text="Palavra, número de pedido, nome de arquivo..." Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"
+                       VerticalAlignment="Center" IsHitTestVisible="False" />
+            <Button Grid.Column="1" Style="{StaticResource BtnPrimario}" Margin="8,0,0,0" Padding="12,6" Click="Buscar_Click" IsDefault="True">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE721;" Margin="0,2,6,0" />
+                    <TextBlock Text="Buscar" />
+                </StackPanel>
+            </Button>
+        </Grid>
+        <TextBlock x:Name="TxtInfo" Grid.Row="1" Foreground="{DynamicResource TextSecondary}" FontSize="12" Margin="2,8,0,4" TextWrapping="Wrap"
+                   Text="Busca só nas conversas de que você participa. Dois cliques abrem a conversa na mensagem." />
+        <ListBox x:Name="Lista" Grid.Row="2" Style="{StaticResource Lista}" MouseDoubleClick="Lista_DoubleClick" KeyDown="Lista_KeyDown">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type app:ResultadoBuscaVM}">
+                    <StackPanel Margin="0,2">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding Quando}" Foreground="{DynamicResource TextMuted}" FontSize="11" />
+                            <TextBlock Text="{Binding Onde}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding Trecho}" Foreground="{DynamicResource TextSecondary}" FontSize="12.5" TextWrapping="Wrap" MaxHeight="36" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+    </Border>
+</Window>

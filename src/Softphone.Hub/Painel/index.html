@@ -1,0 +1,407 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Administração do Softphone</title>
+<link rel="stylesheet" href="painel.css">
+</head>
+<body>
+<header class="topo">
+  <div class="marca">
+    <img class="logo-topo" src="logo.png" alt="Minha Empresa, desde 1979" width="120" height="35">
+    <h1>Softphone<small>Administração</small></h1>
+  </div>
+  <div class="topo-dir" id="topo-sessao" hidden>
+    <span class="saude" id="saude" title="Estado do servidor"><span class="ponto" id="saude-ponto"></span><span id="saude-texto">Hub</span></span>
+    <span class="quem" id="quem"></span>
+    <button type="button" class="btn-topo" id="btn-sair"><span class="ico" aria-hidden="true">&#xF3B1;</span>Sair</button>
+  </div>
+</header>
+
+<!-- ===================== login ===================== -->
+<main class="login" id="tela-login">
+  <section class="login-caixa" aria-labelledby="login-titulo">
+    <!-- ripas se encaixando (CSS puro). Com movimento reduzido ou sem suporte a 3D, o palete aparece pronto e parado. -->
+    <div class="cena" aria-hidden="true">
+      <div class="palete">
+        <span class="ripa baixo"></span><span class="ripa baixo"></span><span class="ripa baixo"></span>
+        <span class="trave meio"></span><span class="trave meio"></span><span class="trave meio"></span>
+        <span class="ripa cima"></span><span class="ripa cima"></span><span class="ripa cima"></span><span class="ripa cima"></span><span class="ripa cima"></span>
+      </div>
+    </div>
+    <p class="login-marca"><img class="logo-login" src="logo.png" alt="Minha Empresa, desde 1979" width="190" height="55"></p>
+    <h2 id="login-titulo">Entrar</h2>
+    <p class="nota">Só a TI (administradores do Softphone) acessa este painel.</p>
+    <p class="aviso" id="login-aviso" role="alert" hidden></p>
+    <form method="post" id="form-senha" autocomplete="on">
+      <label for="login-usuario">Usuário de rede</label>
+      <input id="login-usuario" name="username" autocomplete="username" required placeholder="nome.sobrenome">
+      <label for="login-senha">Senha</label>
+      <input id="login-senha" name="password" type="password" autocomplete="current-password" required>
+      <button type="submit" class="btn primario largo" id="btn-entrar">Entrar</button>
+    </form>
+  </section>
+</main>
+
+<!-- ===================== painel ===================== -->
+<div class="painel" id="tela-painel" hidden>
+  <nav class="abas" role="tablist" aria-label="Áreas do painel">
+    <button type="button" role="tab" class="aba" data-aba="geral" aria-selected="true">Visão geral</button>
+    <button type="button" role="tab" class="aba" data-aba="ia" aria-selected="false">IA</button>
+    <button type="button" role="tab" class="aba" data-aba="comunicados" aria-selected="false">Comunicados</button>
+    <button type="button" role="tab" class="aba" data-aba="qualidade" aria-selected="false">Qualidade das ligações</button>
+    <button type="button" role="tab" class="aba" data-aba="ramais" aria-selected="false">Ramais x AD</button>
+    <button type="button" role="tab" class="aba" data-aba="admins" aria-selected="false">Administradores</button>
+    <button type="button" role="tab" class="aba" data-aba="automacoes" aria-selected="false">Automações</button>
+    <button type="button" role="tab" class="aba" data-aba="auditoria" aria-selected="false">Auditoria</button>
+  </nav>
+
+  <main class="conteudo">
+    <!-- Visão geral -->
+    <section class="secao" id="aba-geral" role="tabpanel" aria-label="Visão geral">
+      <!-- 1.3: Telefonia, Atendimento e Sistema (preenchido por painel-v13.js); os indicadores abrem a lista que os compõe -->
+      <div class="barra-periodo">
+        <label class="inline" for="g-periodo">Período
+          <select id="g-periodo">
+            <option value="hoje" selected>Hoje</option>
+            <option value="7d">Últimos 7 dias</option>
+            <option value="30d">Últimos 30 dias</option>
+          </select>
+        </label>
+        <span class="atualizado" id="g-atualizado" role="status"></span>
+      </div>
+      <div class="modulos" id="g-modulos" aria-busy="true"></div>
+      <div class="detalhe-indicador" id="g-detalhe" hidden>
+        <div class="cabeca"><h2 id="g-detalhe-titulo"></h2><button type="button" class="btn" id="g-detalhe-fechar">Fechar</button></div>
+        <p class="nota-def" id="g-detalhe-def"></p>
+        <div class="tabela-rolagem">
+          <table class="tabela" id="g-detalhe-tabela">
+            <thead><tr><th>Quando</th><th>Pessoa</th><th>Unidade</th><th>Número</th><th>Direção</th><th>Resultado</th><th class="num">Duração</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="g-detalhe-vazio" hidden>Nenhuma chamada neste período com esse critério.</p>
+      </div>
+      <div class="cabeca">
+        <h2>Serviços</h2>
+        <button type="button" class="btn" id="btn-sincronizar" title="Lê o AD agora: pessoas, ramais (ipPhone) e os grupos de administradores">
+          <span class="ico" aria-hidden="true">&#xE895;</span>Sincronizar o AD agora</button>
+      </div>
+      <ul class="saude-lista" id="geral-servicos" aria-busy="true"></ul>
+      <p class="versoes" id="geral-versoes"></p>
+      <div class="cabeca">
+        <h2>Quem usa o Softphone</h2>
+        <input type="search" class="filtro" id="geral-filtro" placeholder="Filtrar por nome, unidade, versão ou PC" aria-label="Filtrar pessoas">
+      </div>
+      <div class="tabela-rolagem">
+        <table class="tabela" id="geral-tabela">
+          <thead><tr><th class="col-ponto" aria-label="Online"></th><th>Pessoa</th><th>Unidade</th><th>Versão</th><th>Computador</th><th>Visto</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="vazio" id="geral-vazio" hidden>Ninguém registrado ainda. Os apps 1.1 ou mais novos aparecem aqui ao conectar.</p>
+    </section>
+
+    <!-- IA -->
+    <section class="secao" id="aba-ia" role="tabpanel" aria-label="IA" hidden>
+      <div class="colunas-form">
+        <div>
+          <h2>IAs que fazem o resumo das gravações</h2>
+          <p class="nota">Cadastre quantas quiser (Gemini, OpenAI, Grok, DeepSeek, Anthropic ou qualquer outra compatível com OpenAI).
+            O texto das ligações e do chat vai para a IA da vez; a transcrição continua no próprio servidor. As chaves ficam
+            criptografadas no servidor e daqui só aparece o fim delas.</p>
+          <ul class="lista" id="ia-lista" aria-busy="true"></ul>
+          <p class="vazio" id="ia-vazio" hidden>Nenhuma IA cadastrada: sem resumo nem "Sugerir resposta" (a transcrição continua).</p>
+          <div class="linha-form">
+            <label for="ia-modo">Como usar</label>
+            <select id="ia-modo">
+              <option value="ordem">Em ordem: usa a 1ª; se falhar, a próxima</option>
+              <option value="revezar">Revezar entre as ligadas; se uma falhar, a próxima</option>
+            </select>
+            <button type="button" class="btn" id="btn-testar-ia"><span class="ico" aria-hidden="true">&#xE945;</span>Testar como o resumo usaria</button>
+            <button type="button" class="btn primario" id="btn-ia-nova"><span class="ico" aria-hidden="true">&#xE710;</span>Adicionar IA</button>
+          </div>
+          <p class="resultado" id="ia-teste" role="status"></p>
+
+          <form method="post" id="form-provedor" class="grade-form" hidden>
+            <h2 id="pv-titulo" class="linha-toda">Adicionar IA</h2>
+            <label for="pv-tipo">Tipo</label>
+            <select id="pv-tipo">
+              <option value="gemini">Google Gemini</option>
+              <option value="openai">OpenAI (ChatGPT)</option>
+              <option value="xai">xAI (Grok)</option>
+              <option value="deepseek">DeepSeek</option>
+              <option value="anthropic">Anthropic (Claude)</option>
+              <option value="outra">Outra (compatível com OpenAI)</option>
+            </select>
+            <label for="pv-nome">Nome</label>
+            <input id="pv-nome" required maxlength="40" autocomplete="off" placeholder="Como aparece aqui e no registro (ex.: Gemini)">
+            <label for="pv-url">Endereço da API</label>
+            <input id="pv-url" type="url" maxlength="300" autocomplete="off" spellcheck="false" placeholder="https://...">
+            <label for="pv-chave">Chave da API</label>
+            <input id="pv-chave" type="text" class="segredo" maxlength="500" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <label for="pv-modelo">Modelo</label>
+            <div class="linha-form sem-margem">
+              <input id="pv-modelo" list="pv-modelos" required maxlength="120" autocomplete="off" spellcheck="false" placeholder="Busque ou digite o nome do modelo">
+              <datalist id="pv-modelos"></datalist>
+              <button type="button" class="btn" id="btn-pv-modelos">Buscar modelos</button>
+            </div>
+            <label for="pv-uso">Pode receber</label>
+            <select id="pv-uso">
+              <option value="tudo">Chat e ligações</option>
+              <option value="chat">Só dados do chat (Sugerir resposta)</option>
+              <option value="ligacoes">Só dados de ligações (resumo das gravações)</option>
+            </select>
+            <label for="pv-ligado">Ligada</label>
+            <div><input id="pv-ligado" type="checkbox" checked> <span class="nota-inline">desligada fica cadastrada, mas não é usada</span></div>
+            <div class="acoes">
+              <button type="submit" class="btn primario" id="btn-pv-salvar">Salvar</button>
+              <button type="button" class="btn" id="btn-pv-cancelar">Cancelar</button>
+            </div>
+            <p class="resultado linha-toda" id="pv-info" role="status"></p>
+          </form>
+
+          <h2>Retenção das gravações</h2>
+          <form method="post" id="form-ia" class="grade-form">
+            <label for="ia-retencao">Apagar gravações depois de</label>
+            <div class="com-sufixo"><input id="ia-retencao" type="number" min="1" max="365" required><span>dias (áudio, transcrição e resumo)</span></div>
+            <div class="acoes">
+              <button type="submit" class="btn primario">Salvar retenção</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comunicados -->
+    <section class="secao" id="aba-comunicados" role="tabpanel" aria-label="Comunicados" hidden>
+      <div class="duas-colunas">
+        <form method="post" id="form-comunicado" class="coluna-form">
+          <h2>Novo comunicado</h2>
+          <label for="com-titulo">Título</label>
+          <input id="com-titulo" maxlength="100" required>
+          <label for="com-texto">Mensagem</label>
+          <textarea id="com-texto" rows="6" maxlength="2000" required></textarea>
+          <div class="par">
+            <div>
+              <label for="com-nivel">Nível</label>
+              <select id="com-nivel">
+                <option value="info">Informativo</option>
+                <option value="importante">Importante</option>
+                <option value="urgente">Urgente (com som)</option>
+              </select>
+            </div>
+            <div>
+              <label for="com-horas">Vale por</label>
+              <select id="com-horas">
+                <option value="1">1 hora</option>
+                <option value="4" selected>4 horas</option>
+                <option value="8">8 horas</option>
+                <option value="24">1 dia</option>
+                <option value="72">3 dias</option>
+                <option value="168">7 dias</option>
+              </select>
+            </div>
+          </div>
+          <label for="com-para">Unidade</label>
+          <select id="com-para"><option value="">Todas</option></select>
+          <label for="com-setores">Setores (separados por vírgula; vazio = todos)</label>
+          <input id="com-setores" maxlength="300" autocomplete="off" placeholder="Comercial, Financeiro">
+          <label for="com-grupo">Grupo do AD (opcional)</label>
+          <input id="com-grupo" list="grp-sugestoes" maxlength="256" autocomplete="off" spellcheck="false" placeholder="só quem é membro">
+          <label class="inline"><input type="checkbox" id="com-ciencia" checked> Exigir "Ciente" (desmarcado: a pessoa só fecha o aviso)</label>
+          <div class="acoes"><button type="button" class="btn" id="btn-com-alcance">Ver quantas pessoas recebem</button></div>
+          <p class="nota" id="com-alcance" role="status"></p>
+          <button type="submit" class="btn primario"><span class="ico" aria-hidden="true">&#xE789;</span>Enviar comunicado</button>
+          <p class="nota">Aparece por cima de tudo no Softphone de quem está online, e para quem abrir depois enquanto valer, até a pessoa clicar em Ciente.</p>
+        </form>
+        <div>
+          <div class="cabeca"><h2>Enviados</h2></div>
+          <ul class="lista" id="com-lista" aria-busy="true"></ul>
+          <p class="vazio" id="com-vazio" hidden>Nenhum comunicado enviado ainda.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Qualidade -->
+    <section class="secao" id="aba-qualidade" role="tabpanel" aria-label="Qualidade das ligações" hidden>
+      <div class="cabeca">
+        <h2>Por unidade</h2>
+        <label class="inline" for="q-dias">Período
+          <select id="q-dias">
+            <option value="1">Hoje</option>
+            <option value="7" selected>7 dias</option>
+            <option value="30">30 dias</option>
+            <option value="90">90 dias</option>
+          </select>
+        </label>
+      </div>
+      <p class="nota">Medido pelo próprio Softphone no áudio que <strong>chega</strong> (sentido recebido; o que a pessoa envia só aparece quando o PABX manda relatório RTCP).
+        Nota de 1 a 4,5: abaixo de 3,6 a conversa falha. Ligação em que nenhum pacote de áudio chegou aparece como <strong>Sem medição</strong>: não entra nas médias nem vale como "100% de perda".</p>
+      <div class="tabela-rolagem">
+        <table class="tabela" id="q-unidades">
+          <thead><tr><th>Unidade</th><th class="num">Medidas</th><th class="num">Nota média</th><th class="num">Ruins</th><th class="num">Perda média</th><th class="num">Variação</th><th class="num">Sem medição</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="vazio" id="q-vazio" hidden>Ainda não há medições neste período. Os apps 1.1 mandam ao fim de cada ligação atendida.</p>
+      <div id="q-bloco-piores">
+        <div class="cabeca"><h2>Ligações ruins (piores primeiro)</h2></div>
+        <div class="tabela-rolagem">
+          <table class="tabela" id="q-piores">
+            <thead><tr><th>Quando</th><th>Pessoa</th><th>Unidade</th><th>Número</th><th class="num">Duração</th><th class="num">Nota</th><th class="num">Perda</th><th class="num">Variação</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="q-sem-ruins" hidden>Nenhuma ligação ruim neste período.</p>
+      </div>
+    </section>
+
+    <!-- Automações do chat (1.3) -->
+    <section class="secao" id="aba-automacoes" role="tabpanel" aria-label="Automações do chat" hidden>
+      <p class="nota">Regras simples de <strong>gatilho → ação</strong> para o chat. Cada regra roda no máximo uma vez por evento (um evento repetido não repete a ação),
+        o assistente automático nunca dispara regra (sem laço) e há limite de 30 execuções por regra por hora. No texto vale <code>{nome}</code> e <code>{numero}</code>.
+        Defina o responsável e os setores abrangidos de cada regra.</p>
+      <div class="tabela-rolagem">
+        <table class="tabela" id="aut-tabela">
+          <thead><tr><th>Regra</th><th>Gatilho</th><th>Ação</th><th>Setores</th><th>Responsável</th><th>Ligada</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="vazio" id="aut-vazio" hidden>Nenhuma regra ainda.</p>
+      <form method="post" id="form-aut" class="artigo-form">
+        <h2>Nova regra</h2>
+        <label for="aut-nome">Nome</label><input id="aut-nome" maxlength="80" required autocomplete="off">
+        <div class="par">
+          <div><label for="aut-gatilho">Gatilho</label>
+            <select id="aut-gatilho"><option value="palavra">Mensagem com palavra-chave</option><option value="chamada_perdida">Chamada perdida</option><option value="boas_vindas">Primeiro acesso (boas-vindas)</option></select></div>
+          <div><label for="aut-acao">Ação</label>
+            <select id="aut-acao"><option value="responder">Responder na conversa (assistente)</option><option value="notificar">Avisar a pessoa (mensagem direta)</option><option value="encaminhar">Encaminhar a mensagem para alguém</option></select></div>
+        </div>
+        <label for="aut-palavras">Palavras-chave (vírgula; só para o gatilho de palavra)</label><input id="aut-palavras" maxlength="300" autocomplete="off" placeholder="orçamento, preço">
+        <label for="aut-texto">Texto da mensagem automática</label><textarea id="aut-texto" rows="3" maxlength="1000"></textarea>
+        <div class="par">
+          <div><label for="aut-destino">Destino (login, só para encaminhar)</label><input id="aut-destino" list="adm-pessoas" autocomplete="off"></div>
+          <div><label for="aut-resp">Responsável pela regra (login)</label><input id="aut-resp" list="adm-pessoas" autocomplete="off"></div>
+        </div>
+        <label for="aut-setores">Setores abrangidos (vírgula; vazio = todos)</label><input id="aut-setores" maxlength="300" autocomplete="off">
+        <div class="acoes"><button type="submit" class="btn primario">Salvar regra</button><span class="resultado" id="aut-resultado" role="status"></span></div>
+      </form>
+      <div class="cabeca"><h2>Últimas execuções</h2></div>
+      <div class="tabela-rolagem">
+        <table class="tabela" id="aut-exec">
+          <thead><tr><th>Quando</th><th>Regra</th><th>Evento</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Auditoria (1.3) -->
+    <section class="secao" id="aba-auditoria" role="tabpanel" aria-label="Auditoria" hidden>
+      <p class="nota">Tudo que a TI muda neste painel (IA, retenção, administradores, comunicados, grupos): quem, quando, o quê e o resultado.
+        O conteúdo enviado (chaves de IA, textos) <strong>não</strong> é gravado aqui. Perfis de acesso: só administradores veem e exportam.</p>
+      <form class="filtros" id="form-aud" method="post">
+        <label>De<input type="date" id="aud-de"></label>
+        <label>Até<input type="date" id="aud-ate"></label>
+        <label>Usuário<input id="aud-usuario" placeholder="login" autocomplete="off"></label>
+        <label>Ação<select id="aud-acao"><option value="">Todas</option><option value="ALTERAR">Alterar</option><option value="EXECUTAR">Executar</option><option value="EXCLUIR">Excluir</option><option value="EXPORTAR">Exportar</option></select></label>
+        <label>Gravidade<select id="aud-gravidade"><option value="">Todas</option><option value="info">Informação (ok)</option><option value="aviso">Aviso (negado/inválido)</option><option value="erro">Erro (servidor)</option></select></label>
+        <label>Ramal<input id="aud-ramal" placeholder="ramal da pessoa" autocomplete="off" inputmode="numeric"></label>
+        <label>Texto ou id da chamada<input id="aud-texto" placeholder="parte do caminho" autocomplete="off"></label>
+        <button type="submit" class="btn primario">Filtrar</button>
+        <button type="button" class="btn" id="btn-aud-csv"><span class="ico" aria-hidden="true">&#xE896;</span>Exportar CSV</button>
+      </form>
+      <div class="tabela-rolagem">
+        <table class="tabela" id="aud-tabela">
+          <thead><tr><th>Quando</th><th>Usuário</th><th>Ação</th><th>Alvo</th><th class="num">Resultado</th><th>Detalhe</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="vazio" id="aud-vazio" hidden>Nenhum registro com esses filtros.</p>
+    </section>
+
+    <!-- Ramais -->
+    <section class="secao" id="aba-ramais" role="tabpanel" aria-label="Ramais x AD" hidden>
+      <div class="cabeca">
+        <label class="inline"><input type="checkbox" id="r-diferentes" checked> Só onde o Softphone e o AD não batem</label>
+        <button type="button" class="btn" id="btn-r-copiar"><span class="ico" aria-hidden="true">&#xE8C8;</span>Copiar como planilha (CSV)</button>
+      </div>
+      <p class="nota">Para gravar no AD os ramais que o Softphone aprendeu: rode o <code>Gravar-Ramais-AD.ps1</code> no DC01 (sem <code>-Gravar</code> ele só mostra).</p>
+      <div class="tabela-rolagem">
+        <table class="tabela" id="r-tabela">
+          <thead><tr><th>Pessoa</th><th>Login</th><th class="num">Softphone</th><th class="num">AD (ipPhone)</th><th>Situação</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="vazio" id="r-vazio" hidden>Tudo batendo: nenhum ramal diferente entre o Softphone e o AD.</p>
+    </section>
+
+    <!-- Administradores -->
+    <section class="secao" id="aba-admins" role="tabpanel" aria-label="Administradores" hidden>
+      <div class="estreito">
+        <div class="cabeca"><h2>Grupos do AD</h2></div>
+        <p class="nota">Quem é membro destes grupos (inclusive por grupo dentro de grupo) é administrador: vê o escudo no
+          Softphone e entra neste painel. Os membros são lidos do AD a cada 30 minutos ou em "Sincronizar o AD agora"
+          (na Visão geral); no app, o escudo aparece na próxima vez que ele conectar.</p>
+        <ul class="lista" id="grp-lista"></ul>
+        <p class="vazio" id="grp-vazio" hidden>Nenhum grupo ainda.</p>
+        <form method="post" id="form-grupo" class="linha-form">
+          <label class="sr" for="grp-nome">Grupo do AD</label>
+          <input id="grp-nome" list="grp-sugestoes" required placeholder="Digite parte do nome do grupo e escolha na lista" autocomplete="off" spellcheck="false" maxlength="256">
+          <datalist id="grp-sugestoes"></datalist>
+          <button type="submit" class="btn primario">Acrescentar grupo</button>
+        </form>
+        <p class="nota" id="grp-busca-info" aria-live="polite"></p>
+
+        <div class="cabeca"><h2>Pessoas</h2></div>
+        <p class="nota">Quem está no hub.env (Hub__Admins) fica fixo. Aqui dá para acrescentar outras pessoas da TI sem mexer no servidor.</p>
+        <ul class="lista" id="adm-lista"></ul>
+        <form method="post" id="form-admin" class="linha-form">
+          <label class="sr" for="adm-pessoa">Pessoa</label>
+          <input id="adm-pessoa" list="adm-pessoas" required placeholder="Digite o nome ou o login" autocomplete="off">
+          <datalist id="adm-pessoas"></datalist>
+          <button type="submit" class="btn primario">Acrescentar</button>
+        </form>
+
+        <div class="cabeca"><h2>Perfis de acesso (grupo do AD → perfil → setor)</h2></div>
+        <p class="nota">Administrador = grupos e pessoas acima. <strong>Supervisor</strong>: envia comunicado só para o(s) setor(es) dele (setor vazio = o próprio setor da pessoa no AD).
+          <strong>Atendente</strong> é o padrão de todos: recebe os comunicados. Vale o perfil mais alto entre os grupos (grupos dentro de grupos contam).
+          Quem sai do grupo perde o perfil na próxima leitura do AD (até 30 min ou "Sincronizar agora"), mesmo com o app aberto: a regra é conferida no servidor.
+          Se o AD sair do ar, ficam valendo os membros da última leitura boa e os administradores do hub.env.</p>
+        <div class="tabela-rolagem">
+          <table class="tabela" id="acc-tabela">
+            <thead><tr><th>Grupo do AD</th><th>Perfil</th><th>Setores</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="acc-vazio" hidden>Nenhuma regra: todos são atendentes (e a TI, administradora).</p>
+        <form method="post" id="form-acesso" class="linha-form">
+          <label class="sr" for="acc-grupo">Grupo do AD</label>
+          <input id="acc-grupo" list="grp-sugestoes" required placeholder="Grupo do AD" autocomplete="off" spellcheck="false" maxlength="256">
+          <label class="sr" for="acc-perfil">Perfil</label>
+          <select id="acc-perfil"><option value="supervisor">Supervisor</option><option value="atendente">Atendente</option></select>
+          <label class="sr" for="acc-setores">Setores</label>
+          <input id="acc-setores" placeholder="Setores (vírgula); vazio = o da pessoa" autocomplete="off" maxlength="300">
+          <button type="submit" class="btn primario">Acrescentar regra</button>
+        </form>
+        <form method="post" id="form-perfil-consulta" class="linha-form">
+          <label class="sr" for="acc-consulta">Conferir o perfil de</label>
+          <input id="acc-consulta" list="adm-pessoas" placeholder="Login para conferir o perfil efetivo" autocomplete="off">
+          <button type="submit" class="btn">Conferir</button>
+        </form>
+        <p class="resultado" id="acc-resultado" role="status"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <span id="status" role="status">Pronto.</span>
+    <button type="button" class="btn" id="btn-atualizar"><span class="ico" aria-hidden="true">&#xE72C;</span>Atualizar</button>
+  </footer>
+</div>
+<script src="painel.js"></script>
+<script src="painel-v13.js"></script>
+</body>
+</html>

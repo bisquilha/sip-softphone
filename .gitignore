@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+*.user
+publicar/
+distribuicao/
+.tools/
+.claude-flow/

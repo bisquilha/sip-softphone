@@ -1,0 +1,9 @@
+{
+  "Servidor": "pbx.example.com",
+  "Dominio": "pbx.example.com",
+  "Proxy": "",
+  "Transporte": "UDP",
+  "RegistroSegundos": 300,
+  "ManterAtivoSegundos": 15,
+  "Hub": "https://softphone.corp.example.com"
+}

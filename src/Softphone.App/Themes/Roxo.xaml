@@ -1,0 +1,55 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Tema Roxo (1.2.4): paleta escura com degradê atrás do teclado. Mesmas chaves de Dark.xaml + DialerBg/DialerText/DialerMuted. -->
+    <SolidColorBrush x:Key="BgWindow" Color="#100B16" />
+    <SolidColorBrush x:Key="BgSurface" Color="#1B1424" />
+    <SolidColorBrush x:Key="BgSurfaceAlt" Color="#150F1C" />
+    <SolidColorBrush x:Key="BgHover" Color="#271D33" />
+    <SolidColorBrush x:Key="BgPressed" Color="#32264A" />
+    <SolidColorBrush x:Key="BorderSubtle" Color="#3D2E52" />
+    <SolidColorBrush x:Key="BorderStrong" Color="#84988F" />
+
+    <SolidColorBrush x:Key="TextPrimary" Color="#E5EEEA" />
+    <SolidColorBrush x:Key="TextSecondary" Color="#B2C3BB" />
+    <SolidColorBrush x:Key="TextMuted" Color="#98AAA2" />
+
+    <SolidColorBrush x:Key="Accent" Color="#7B3FB8" />
+    <SolidColorBrush x:Key="AccentHover" Color="#9150D1" />
+    <SolidColorBrush x:Key="OnAccent" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="AccentText" Color="#C9A2F2" />
+    <SolidColorBrush x:Key="AccentSoft" Color="#2B1A42" />
+
+    <SolidColorBrush x:Key="CallGreen" Color="#1E8E47" />
+    <SolidColorBrush x:Key="CallGreenHover" Color="#23A052" />
+    <SolidColorBrush x:Key="CallRed" Color="#C4372A" />
+    <SolidColorBrush x:Key="CallRedHover" Color="#D64536" />
+    <SolidColorBrush x:Key="OnCall" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="OkText" Color="#6FD09A" />
+    <SolidColorBrush x:Key="BadText" Color="#FF9A90" />
+    <SolidColorBrush x:Key="WarnText" Color="#F3D08B" />
+    <SolidColorBrush x:Key="WarnBg" Color="#33270F" />
+    <SolidColorBrush x:Key="WarnBorder" Color="#7A5A1C" />
+
+    <SolidColorBrush x:Key="DotOk" Color="#3DD07A" />
+    <SolidColorBrush x:Key="DotBad" Color="#FF6369" />
+    <SolidColorBrush x:Key="DotWait" Color="#FFB547" />
+    <SolidColorBrush x:Key="DotOff" Color="#6F8078" />
+
+    <SolidColorBrush x:Key="HeaderBg" Color="#1F0B33" />
+    <SolidColorBrush x:Key="HeaderText" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="HeaderSubtext" Color="#B3CFC8" />
+    <SolidColorBrush x:Key="HeaderButtonHover" Color="#4A1F7D" />
+    <SolidColorBrush x:Key="HeaderButtonOn" Color="#C4372A" />
+
+    <SolidColorBrush x:Key="CallCardBg" Color="#1C1526" />
+    <SolidColorBrush x:Key="CallCardBorder" Color="#6B3AA0" />
+    <SolidColorBrush x:Key="FocusRing" Color="#C9A2F2" />
+    <LinearGradientBrush x:Key="DialerBg" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#7B3FB8" Offset="0" />
+        <GradientStop Color="#2A1245" Offset="0.55" />
+        <GradientStop Color="#000000" Offset="1" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="DialerText" Color="#F2F7F4" />
+    <SolidColorBrush x:Key="DialerMuted" Color="#C9D6CF" />
+</ResourceDictionary>

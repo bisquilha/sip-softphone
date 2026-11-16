@@ -1,0 +1,719 @@
+<Window x:Class="Softphone.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:Softphone.App"
+        Title="Softphone" Width="380" Height="660" MinWidth="340" MinHeight="560"
+        Background="{DynamicResource BgWindow}" Foreground="{DynamicResource TextPrimary}"
+        FontFamily="Segoe UI" FontSize="13" Icon="Assets/softphone.ico"
+        WindowStartupLocation="Manual" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+    <Window.Resources>
+        <!-- cartão de chamada ativa -->
+        <DataTemplate x:Key="CartaoChamada" DataType="{x:Type app:ChamadaVM}">
+            <Border Background="{DynamicResource CallCardBg}" BorderBrush="{DynamicResource CallCardBorder}" BorderThickness="1"
+                    CornerRadius="10" Padding="12,10" Margin="10,8,10,0" Visibility="{Binding ExibirCartao, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="42" Height="42" CornerRadius="21" Background="{DynamicResource AccentSoft}" VerticalAlignment="Center">
+                            <Grid>
+                                <TextBlock Text="{Binding Iniciais}" Foreground="{DynamicResource AccentText}" FontWeight="SemiBold" FontSize="15"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IniciaisSaoIcone}" Value="True">
+                                                    <Setter Property="FontFamily" Value="{StaticResource Icones}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Titulo}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Subtitulo}" Foreground="{DynamicResource TextSecondary}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding EstadoTexto}" Foreground="{DynamicResource AccentText}" FontSize="12" Margin="0,2,0,0" />
+                            <TextBlock Text="{Binding Contexto}" Foreground="{DynamicResource TextSecondary}" FontSize="11.5" Margin="0,2,0,0"
+                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Contexto}"
+                                       Visibility="{Binding TemContexto, Converter={StaticResource BoolToVis}}" />
+                            <TextBlock Text="{Binding TextoConferencia}" Foreground="{DynamicResource AccentText}" FontSize="11.5" FontWeight="SemiBold" Margin="0,2,0,0"
+                                       TextTrimming="CharacterEllipsis" Visibility="{Binding EmConferencia, Converter={StaticResource BoolToVis}}" />
+                            <!-- qualidade da ligação (perda/variação medidas no áudio que chega) -->
+                            <StackPanel Orientation="Horizontal" Margin="0,3,0,0" Background="Transparent" ToolTip="{Binding QualidadeDetalhe}"
+                                        Visibility="{Binding MostrarQualidade, Converter={StaticResource BoolToVis}}">
+                                <StackPanel.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource OkText}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding NivelQualidade}" Value="Regular">
+                                                <Setter Property="Foreground" Value="{DynamicResource WarnText}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding NivelQualidade}" Value="Ruim">
+                                                <Setter Property="Foreground" Value="{DynamicResource BadText}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding NivelQualidade}" Value="SemAudio">
+                                                <Setter Property="Foreground" Value="{DynamicResource BadText}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Resources>
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="{Binding IconeQualidade}" FontSize="12" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding QualidadeCurta}" FontSize="11.5" Margin="5,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- tocando: atender / recusar -->
+                    <UniformGrid Columns="2" Margin="0,10,0,0" Visibility="{Binding Tocando, Converter={StaticResource BoolToVis}}">
+                        <Button Style="{StaticResource BtnVerde}" Margin="0,0,4,0" Padding="0,8" Click="Atender_Click" ToolTip="Atender">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE717;" Margin="0,1,6,0" />
+                                <TextBlock Text="Atender" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource BtnVermelho}" Margin="4,0,0,0" Padding="0,8" Click="Desligar_Click" ToolTip="Recusar">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE778;" Margin="0,1,6,0" />
+                                <TextBlock Text="Recusar" />
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+
+                    <!-- em conversa: ações -->
+                    <!-- compacto (outra chamada em foco): só retomar / desligar -->
+                    <UniformGrid Columns="2" Margin="0,8,0,0" Visibility="{Binding Compacto, Converter={StaticResource BoolToVis}}">
+                        <Button Style="{StaticResource BtnPrimario}" Margin="0,0,4,0" Padding="0,6" Click="Espera_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="{Binding IconeEspera}" Margin="0,1,6,0" />
+                                <TextBlock Text="{Binding TextoEspera}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource BtnVermelho}" Margin="4,0,0,0" Padding="0,6" Click="Desligar_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE778;" Margin="0,1,6,0" />
+                                <TextBlock Text="Desligar" />
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+
+                    <WrapPanel Margin="0,8,0,0" HorizontalAlignment="Center" Visibility="{Binding AcoesCompletas, Converter={StaticResource BoolToVis}}">
+                        <Button Click="Mudo_Click" ToolTip="Mudo (desliga o seu microfone)">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource BtnAcao}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Mudo}" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource Accent}" />
+                                            <Setter Property="Tag" Value="{DynamicResource AccentHover}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource OnAccent}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel>
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xEC54;" FontSize="16" HorizontalAlignment="Center" />
+                                <TextBlock Text="Mudo" FontSize="11" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Click="Espera_Click" ToolTip="Colocar em espera / retomar">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource BtnAcao}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding EmEspera}" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource Accent}" />
+                                            <Setter Property="Tag" Value="{DynamicResource AccentHover}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource OnAccent}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel>
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="{Binding IconeEspera}" FontSize="16" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding TextoEspera}" FontSize="11" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource BtnAcao}" Click="Teclado_Click" ToolTip="Teclado para URA (DTMF)">
+                            <StackPanel>
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE75F;" FontSize="16" HorizontalAlignment="Center" />
+                                <TextBlock Text="Teclado" FontSize="11" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource BtnAcao}" Click="Transferir_Click" ToolTip="Transferir direto para outro número">
+                            <StackPanel>
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE8AB;" FontSize="16" HorizontalAlignment="Center" />
+                                <TextBlock Text="Transferir" FontSize="11" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource BtnAcao}" Click="Consulta_Click" ToolTip="Falar antes com quem vai receber (transferência assistida)">
+                            <StackPanel>
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE8D4;" FontSize="16" HorizontalAlignment="Center" />
+                                <TextBlock Text="Consultar" FontSize="11" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Click="Gravar_Click" ToolTip="Gravar a ligação (sem aviso falado). Depois sai a transcrição e o resumo.">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource BtnAcao}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Gravando}" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource CallRed}" />
+                                            <Setter Property="Tag" Value="{DynamicResource CallRedHover}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource OnCall}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel>
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE7C8;" FontSize="16" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding TextoGravar}" FontSize="11" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource BtnAcao}" Click="Conferencia_Click" ToolTip="Juntar com a outra chamada: os três conversam juntos"
+                                Visibility="{Binding PodeConferencia, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE716;" FontSize="16" HorizontalAlignment="Center" />
+                                <TextBlock Text="Conferência" FontSize="11" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+
+                    <!-- consulta em andamento: concluir transferência -->
+                    <Button Style="{StaticResource BtnPrimario}" Margin="0,8,0,0" Padding="0,8" Click="ConcluirConsulta_Click"
+                            Visibility="{Binding EhConsulta, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE8AB;" Margin="0,1,6,0" />
+                            <TextBlock Text="Concluir transferência" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- desligar (não aparece enquanto toca: lá é "Recusar") -->
+                    <Button Style="{StaticResource BtnVermelho}" Margin="0,8,0,0" Padding="0,8" Click="Desligar_Click"
+                            Visibility="{Binding DesligarGrande, Converter={StaticResource BoolToVis}}" ToolTip="Desligar">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE778;" Margin="0,1,6,0" />
+                            <TextBlock Text="Desligar" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="LinhaHistorico" DataType="{x:Type app:HistoricoVM}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="26" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Icone}" FontFamily="Segoe UI Symbol" FontSize="15" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource OkText}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Perdida}" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource BadText}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Falhou}" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                    <TextBlock Text="{Binding Titulo}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Perdida}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource BadText}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Detalhe}" Foreground="{DynamicResource TextSecondary}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding DicaQualidade}" />
+                </StackPanel>
+                <Button Grid.Column="2" Style="{StaticResource BtnIcone}" Content="&#xE717;" ToolTip="Ligar" Click="LigarItem_Click" Foreground="{DynamicResource CallGreen}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="LinhaContato" DataType="{x:Type app:ContatoVM}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource AccentSoft}">
+                    <TextBlock Text="{Binding Iniciais}" Foreground="{DynamicResource AccentText}" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Detalhe}" Foreground="{DynamicResource TextSecondary}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button Grid.Column="2" Style="{StaticResource BtnIcone}" Content="&#xE717;" ToolTip="Ligar" Click="LigarItem_Click" Foreground="{DynamicResource CallGreen}" />
+            </Grid>
+        </DataTemplate>
+
+        <Style x:Key="TeclaConteudo" TargetType="StackPanel">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ===== Cabeçalho: status do registro ===== -->
+        <Border Background="{DynamicResource HeaderBg}" Padding="14,10,8,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <!-- clicar no nome/status abre o menu de presença (Disponível, Ausente, Não perturbe, recado) -->
+                <Button x:Name="BtnPresenca" Style="{StaticResource BtnBase}" Background="Transparent" Tag="{DynamicResource HeaderButtonHover}" Padding="6,3"
+                        Margin="-6,-3,0,-3" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Click="Presenca_Click" ToolTip="Mudar a sua presença">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtNome" Text="Softphone" Foreground="{DynamicResource HeaderText}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                            <Ellipse x:Name="PontoStatus" Width="9" Height="9" Fill="{DynamicResource DotOff}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="TxtStatus" Text="Desconectado" Foreground="{DynamicResource HeaderSubtext}" FontSize="12" Margin="6,0,0,0" TextTrimming="CharacterEllipsis" />
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE70D;" Foreground="{DynamicResource HeaderSubtext}" FontSize="9" Margin="6,2,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Button.ContextMenu>
+                        <ContextMenu x:Name="MenuPresenca">
+                            <MenuItem Header="Disponível" Tag="Disponivel" Click="MenuPresenca_Click" />
+                            <MenuItem Header="Ausente" Tag="Ausente" Click="MenuPresenca_Click" />
+                            <MenuItem Header="Não perturbe (recusa chamadas e silencia o chat)" Tag="NaoPerturbe" Click="MenuPresenca_Click" />
+                            <Separator />
+                            <MenuItem Header="Definir recado..." Click="MenuRecado_Click" />
+                            <MenuItem x:Name="MenuLimparRecado" Header="Limpar recado" Click="MenuLimparRecado_Click" />
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnRamais" Style="{StaticResource BtnHeader}" Content="&#xE80A;" Click="Ramais_Click" ToolTip="Painel de ramais: quem está livre ou em ligação (recepção)" />
+                    <Button x:Name="BtnAdmin" Style="{StaticResource BtnHeader}" Content="&#xE7EF;" Click="Admin_Click" ToolTip="Painel de administração (abre no navegador)" Visibility="Collapsed" />
+                    <Button x:Name="BtnTemas" Style="{StaticResource BtnHeader}" Content="&#xE790;" Click="Temas_Click" ToolTip="Temas: escolha as cores do Softphone" AutomationProperties.Name="Temas" />
+                    <Button x:Name="BtnNaoPerturbe" Style="{StaticResource BtnHeader}" Content="&#xE708;" Click="NaoPerturbe_Click" ToolTip="Não perturbe: recusa as chamadas recebidas" />
+                    <Button Style="{StaticResource BtnHeader}" Content="&#xE713;" Click="Config_Click" ToolTip="Configurações" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ===== Aviso (erro de registro, etc.) ===== -->
+        <Border x:Name="Aviso" Grid.Row="1" Background="{DynamicResource WarnBg}" BorderBrush="{DynamicResource WarnBorder}" BorderThickness="0,0,0,1"
+                Padding="12,8" Visibility="Collapsed">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TxtAviso" Foreground="{DynamicResource WarnText}" TextWrapping="Wrap" FontSize="12" VerticalAlignment="Center" />
+                <Button x:Name="BtnAvisoAcao" Grid.Column="1" Style="{StaticResource BtnContorno}" Padding="10,4" Margin="8,0,0,0" FontSize="12"
+                        Content="Configurar" Click="Config_Click" />
+            </Grid>
+        </Border>
+
+        <!-- ===== Chamadas ativas ===== -->
+        <ScrollViewer x:Name="RolagemChamadas" Grid.Row="2" VerticalScrollBarVisibility="Auto" Focusable="False">
+            <ItemsControl x:Name="ListaChamadas" ItemTemplate="{StaticResource CartaoChamada}" Focusable="False" />
+        </ScrollViewer>
+
+        <!-- ===== Abas ===== -->
+        <Border Grid.Row="3" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1" Margin="0,8,0,0">
+            <UniformGrid Columns="5">
+                <RadioButton x:Name="AbaDiscador" Style="{StaticResource Aba}" GroupName="abas" IsChecked="True" Checked="Aba_Checked" ToolTip="Discador">
+                    <StackPanel>
+                        <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE75F;" HorizontalAlignment="Center" FontSize="15" />
+                        <TextBlock Text="Discador" FontSize="11.5" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="AbaAtalhos" Style="{StaticResource Aba}" GroupName="abas" Checked="Aba_Checked" ToolTip="Atalhos: seus botões de discagem rápida e ações">
+                    <StackPanel>
+                        <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE734;" HorizontalAlignment="Center" FontSize="15" />
+                        <TextBlock Text="Atalhos" FontSize="11.5" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="AbaRecentes" Style="{StaticResource Aba}" GroupName="abas" Checked="Aba_Checked" ToolTip="Chamadas recentes">
+                    <StackPanel>
+                        <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE81C;" HorizontalAlignment="Center" FontSize="15" />
+                        <TextBlock x:Name="TxtAbaRecentes" Text="Recentes" FontSize="11.5" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="AbaConversas" Style="{StaticResource Aba}" GroupName="abas" Checked="Aba_Checked" ToolTip="Chat interno">
+                    <StackPanel>
+                        <Grid HorizontalAlignment="Center">
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE8BD;" HorizontalAlignment="Center" FontSize="15" />
+                            <Border x:Name="SeloConversas" Background="{DynamicResource CallRed}" CornerRadius="7" MinWidth="14" Height="14" Padding="3,0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-5,-14,0" Visibility="Collapsed">
+                                <TextBlock x:Name="TxtSeloConversas" Foreground="White" FontSize="9.5" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Text="Conversas" FontSize="11.5" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="AbaContatos" Style="{StaticResource Aba}" GroupName="abas" Checked="Aba_Checked" ToolTip="Pessoas da empresa e seus contatos">
+                    <StackPanel>
+                        <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE716;" HorizontalAlignment="Center" FontSize="15" />
+                        <TextBlock Text="Pessoas" FontSize="11.5" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                    </StackPanel>
+                </RadioButton>
+            </UniformGrid>
+        </Border>
+
+        <Grid Grid.Row="4">
+            <!-- ===== Discador ===== -->
+            <Grid x:Name="PainelDiscador" Margin="16,10,16,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- 1.2.4: degradê do tema atrás do teclado (a margem negativa faz ele ocupar a área inteira da aba) -->
+                <Border Grid.RowSpan="5" Margin="-16,-10,-16,-14" Background="{DynamicResource DialerBg}" IsHitTestVisible="False" />
+                <TextBlock x:Name="TxtModoTeclado" Text="Teclado da chamada: as teclas vão para a URA" Foreground="{DynamicResource AccentText}"
+                           FontSize="12" HorizontalAlignment="Center" Visibility="Collapsed" />
+                <Grid Grid.Row="1" Margin="0,4,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="34" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="34" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="CaixaNumero" Grid.Column="1" FontSize="24" HorizontalContentAlignment="Center" BorderThickness="0" Background="Transparent"
+                             Foreground="{DynamicResource DialerText}" CaretBrush="{DynamicResource DialerText}"
+                             KeyDown="CaixaNumero_KeyDown" TextChanged="CaixaNumero_TextChanged" AutomationProperties.Name="Número" />
+                    <TextBlock x:Name="DicaNumero" Grid.Column="1" Text="Número ou ramal" FontSize="18" Foreground="{DynamicResource DialerMuted}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Opacity="0.7" />
+                    <Button x:Name="BtnApagar" Grid.Column="2" Style="{StaticResource BtnIcone}" Content="&#xE750;" ToolTip="Apagar" Click="Apagar_Click" Visibility="Hidden" />
+                </Grid>
+                <TextBlock x:Name="TxtSugestao" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,-12"
+                           Foreground="{DynamicResource DialerMuted}" FontSize="12" />
+
+                <!-- Viewbox: com pouco espaço (várias chamadas) o teclado encolhe inteiro em vez de amassar -->
+                <Viewbox Grid.Row="2" Margin="0,12,0,8" MaxWidth="300" MaxHeight="300" StretchDirection="DownOnly">
+                <UniformGrid x:Name="Teclado" Columns="3" Rows="4" Width="300" Height="300">
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="1"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="1" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text=" " FontSize="9" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="2"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="2" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="ABC" FontSize="9" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="3"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="3" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="DEF" FontSize="9" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="4"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="4" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="GHI" FontSize="9" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="5"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="5" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="JKL" FontSize="9" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="6"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="6" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="MNO" FontSize="9" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="7"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="7" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="PQRS" FontSize="9" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="8"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="8" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="TUV" FontSize="9" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="9"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="9" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="WXYZ" FontSize="9" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="*"><TextBlock Text="*" FontSize="24" /></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="0"><StackPanel Style="{StaticResource TeclaConteudo}"><TextBlock Text="0" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="+" FontSize="9" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" /></StackPanel></Button>
+                    <Button Style="{StaticResource BtnTecla}" Click="Tecla_Click" Uid="#"><TextBlock Text="#" FontSize="22" /></Button>
+                </UniformGrid>
+                </Viewbox>
+
+                <Button x:Name="BtnLigar" Grid.Row="3" Style="{StaticResource BtnVerde}" HorizontalAlignment="Center" Width="180" Padding="0,11" Click="Ligar_Click" ToolTip="Ligar (Enter)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE717;" FontSize="16" Margin="0,1,8,0" />
+                        <TextBlock Text="Ligar" FontSize="14" />
+                    </StackPanel>
+                </Button>
+
+                <!-- 1.1.5: liga/desliga a gravação automática sem abrir as Configurações (mesma opção de Configurações > Chamadas) -->
+                <Button x:Name="BtnGravarAuto" Grid.Row="4" Style="{StaticResource BtnIcone}" HorizontalAlignment="Center" Margin="0,8,0,0" Padding="10,5"
+                        Click="GravarAuto_Click" AutomationProperties.Name="Gravação automática">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="IconeGravarAuto" FontFamily="{StaticResource Icones}" Text="&#xE7C8;" FontSize="13" Margin="0,1,6,0" />
+                        <TextBlock x:Name="TxtGravarAuto" FontSize="12" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- ===== Atalhos (1.2.4): botões do usuário; os cartões são montados em AtalhosPainel.cs ===== -->
+            <Grid x:Name="PainelAtalhos" Visibility="Collapsed" Margin="14,10,14,10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Margin="2,0,2,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Atalhos" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock x:Name="TxtDicaAtalhos" FontSize="11.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button x:Name="BtnNovoAtalho" Grid.Column="1" Style="{StaticResource BtnContorno}" Padding="12,6" Click="NovoAtalho_Click" AutomationProperties.Name="Novo atalho">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE710;" FontSize="12" Margin="0,1,6,0" />
+                            <TextBlock Text="Novo" FontSize="12.5" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Focusable="False">
+                    <WrapPanel x:Name="GradeAtalhos" />
+                </ScrollViewer>
+            </Grid>
+
+            <!-- ===== Recentes ===== -->
+            <Grid x:Name="PainelRecentes" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- 1.3: busca por nome, número, ramal, setor ou data; filtros de direção e resultado; histórico completo -->
+                <StackPanel Grid.Row="0" Margin="12,8,12,0">
+                    <TextBox x:Name="BuscaRecentes" Height="28" VerticalContentAlignment="Center" TextChanged="BuscaRecentes_TextChanged"
+                             ToolTip="Nome, número, ramal, setor ou data (ex.: 10/11, hoje, ontem). Acentos e formatação não importam."
+                             AutomationProperties.Name="Buscar nas chamadas recentes" />
+                    <TextBlock Text="Buscar por nome, número, setor ou data" Foreground="{DynamicResource TextMuted}" FontSize="11" Margin="2,2,0,0" />
+                    <WrapPanel Margin="0,4,0,0">
+                        <ComboBox x:Name="FiltroDirecao" Width="104" Margin="0,0,6,0" SelectedIndex="0" SelectionChanged="FiltroRecentes_Changed" AutomationProperties.Name="Direção da chamada">
+                            <ComboBoxItem Content="Todas" /><ComboBoxItem Content="Recebidas" /><ComboBoxItem Content="Realizadas" />
+                        </ComboBox>
+                        <ComboBox x:Name="FiltroResultado" Width="112" Margin="0,0,6,0" SelectedIndex="0" SelectionChanged="FiltroRecentes_Changed" AutomationProperties.Name="Resultado da chamada">
+                            <ComboBoxItem Content="Qualquer" /><ComboBoxItem Content="Atendidas" /><ComboBoxItem Content="Perdidas" /><ComboBoxItem Content="Recusadas" /><ComboBoxItem Content="Falhas" />
+                        </ComboBox>
+                        <CheckBox x:Name="ChkHistoricoCompleto" Content="Histórico completo" VerticalAlignment="Center" Checked="FiltroRecentes_Changed" Unchecked="FiltroRecentes_Changed"
+                                  ToolTip="Mostra todo o histórico guardado, não só as 300 mais recentes" />
+                    </WrapPanel>
+                    <TextBlock x:Name="TxtContagemRecentes" Foreground="{DynamicResource TextMuted}" FontSize="11" Margin="2,4,0,0" />
+                </StackPanel>
+                <ListBox x:Name="ListaRecentes" Grid.Row="1" Style="{StaticResource Lista}" ItemTemplate="{StaticResource LinhaHistorico}" Margin="0,6,0,0"
+                         MouseDoubleClick="Lista_DoubleClick" KeyDown="Lista_KeyDown">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Ligar" Click="MenuLigar_Click" />
+                            <MenuItem Header="Copiar número" Click="MenuCopiar_Click" />
+                            <MenuItem Header="Salvar nos contatos" Click="MenuSalvarContato_Click" />
+                            <Separator />
+                            <MenuItem Header="Bloquear este número" Click="MenuBloquear_Click" />
+                            <MenuItem Header="Apagar do histórico" Click="MenuApagarHistorico_Click" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
+                <TextBlock x:Name="TxtSemRecentes" Grid.Row="1" Text="Nenhuma chamada ainda." Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" Margin="0,40,0,0" />
+                <DockPanel Grid.Row="2" Margin="12,6,12,12" LastChildFill="False">
+                    <Button DockPanel.Dock="Left" Style="{StaticResource BtnContorno}" Click="Gravacoes_Click" ToolTip="Ligações gravadas: transcrição, resumo e próximos passos">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE7C8;" Margin="0,1,6,0" />
+                            <TextBlock Text="Gravações" />
+                        </StackPanel>
+                    </Button>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource BtnContorno}" Content="Limpar histórico" Click="LimparHistorico_Click" />
+                </DockPanel>
+            </Grid>
+
+            <!-- ===== Conversas (chat interno) ===== -->
+            <Grid x:Name="PainelConversas" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border x:Name="AvisoChat" Background="{DynamicResource WarnBg}" BorderBrush="{DynamicResource WarnBorder}" BorderThickness="0,0,0,1" Padding="12,8" Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="TxtAvisoChat" Foreground="{DynamicResource WarnText}" TextWrapping="Wrap" FontSize="12" VerticalAlignment="Center" />
+                        <Button x:Name="BtnEntrarChat" Grid.Column="1" Style="{StaticResource BtnContorno}" Padding="10,4" Margin="8,0,0,0" FontSize="12" Content="Entrar" Click="EntrarChat_Click" Visibility="Collapsed" />
+                    </Grid>
+                </Border>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="12,10,12,4">
+                    <Button Style="{StaticResource BtnPrimario}" Padding="10,6" Click="NovaConversa_Click" ToolTip="Conversar com alguém da empresa">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE710;" Margin="0,2,6,0" />
+                            <TextBlock Text="Conversa" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource BtnContorno}" Padding="10,6" Margin="8,0,0,0" Click="NovoGrupo_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE716;" Margin="0,2,6,0" />
+                            <TextBlock Text="Grupo" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource BtnContorno}" Padding="10,6" Margin="8,0,0,0" Click="ReunirAgora_Click" ToolTip="Escolha quem chamar (toca no Softphone de quem está online) ou agende no Outlook">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE714;" Margin="0,2,6,0" />
+                            <TextBlock Text="Nova reunião" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="BtnBuscarConversas" Style="{StaticResource BtnIcone}" Content="&#xE721;" Margin="4,0,0,0" Click="BuscarConversas_Click" ToolTip="Buscar nas conversas" />
+                </StackPanel>
+                <ListBox x:Name="ListaConversas" Grid.Row="2" Style="{StaticResource Lista}" MouseDoubleClick="Conversa_Abrir" KeyDown="Conversa_KeyDown" PreviewMouseLeftButtonUp="Conversa_Clique"
+                         ContextMenuOpening="MenuConversa_Opening">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Abrir" Click="MenuConversaAbrir_Click" />
+                            <MenuItem x:Name="MenuConversaVideo" Header="Chamada de vídeo" Click="MenuConversaVideo_Click" />
+                            <Separator />
+                            <MenuItem Header="Ocultar conversa (Delete)" Click="MenuConversaOcultar_Click" />
+                            <MenuItem x:Name="MenuConversaSair" Header="Sair do grupo" Click="MenuConversaSair_Click" />
+                            <MenuItem x:Name="MenuConversaExcluir" Header="Excluir grupo para todos" Click="MenuConversaExcluir_Click" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type app:ConversaVM}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid Width="36" Height="36">
+                                    <Border CornerRadius="18" Background="{DynamicResource AccentSoft}">
+                                        <TextBlock Text="{Binding Iniciais}" Foreground="{DynamicResource AccentText}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IniciaisSaoIcone}" Value="True">
+                                                            <Setter Property="FontFamily" Value="{StaticResource Icones}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                    <Ellipse Width="11" Height="11" HorizontalAlignment="Right" VerticalAlignment="Bottom" Stroke="{DynamicResource BgWindow}" StrokeThickness="2"
+                                             Visibility="{Binding MostrarPresenca, Converter={StaticResource BoolToVis}}" app:Pincel.Recurso="{Binding CorPresenca}" />
+                                </Grid>
+                                <StackPanel Grid.Column="1" Margin="10,0,6,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Titulo}" TextTrimming="CharacterEllipsis">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontWeight" Value="Normal" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding TemNaoLidas}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Previa}" Foreground="{DynamicResource TextSecondary}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding Hora}" Foreground="{DynamicResource TextMuted}" FontSize="11" HorizontalAlignment="Right" />
+                                    <Border Background="{DynamicResource Accent}" CornerRadius="9" MinWidth="18" Height="18" Padding="5,0" Margin="0,3,0,0" HorizontalAlignment="Right"
+                                            Visibility="{Binding TemNaoLidas, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="{Binding NaoLidas}" Foreground="{DynamicResource OnAccent}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock x:Name="TxtSemConversas" Grid.Row="2" TextWrapping="Wrap" TextAlignment="Center" Margin="24,40,24,0" Foreground="{DynamicResource TextMuted}"
+                           Text="Nenhuma conversa ainda. Clique em &quot;Nova conversa&quot; ou, na aba Pessoas, no balão ao lado de alguém." />
+            </Grid>
+
+            <!-- ===== Pessoas: empresa (Hub/AD) e meus contatos ===== -->
+            <Grid x:Name="PainelContatos" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Margin="12,8,12,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="FiltroEmpresa" Style="{StaticResource Aba}" GroupName="pessoas" IsChecked="True" Checked="FiltroPessoas_Checked" Content="Empresa" Margin="0,0,6,0" />
+                        <RadioButton x:Name="FiltroMeus" Style="{StaticResource Aba}" GroupName="pessoas" Checked="FiltroPessoas_Checked" Content="Meus contatos" />
+                    </StackPanel>
+                    <CheckBox x:Name="ChkSoOnline" Grid.Column="1" Content="Só online" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0" Checked="ChkSoOnline_Changed" Unchecked="ChkSoOnline_Changed" />
+                </Grid>
+                <Grid Grid.Row="1" Margin="12,8,12,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="CaixaBusca" TextChanged="Busca_TextChanged" AutomationProperties.Name="Buscar contato" />
+                    <TextBlock Text="Buscar por nome, setor, unidade ou ramal" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                               x:Name="DicaBusca" TextTrimming="CharacterEllipsis" />
+                    <Button x:Name="BtnNovoContato" Grid.Column="1" Style="{StaticResource BtnPrimario}" Margin="8,0,0,0" Padding="10,6" Click="NovoContato_Click" ToolTip="Novo contato" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE710;" Margin="0,2,6,0" />
+                            <TextBlock Text="Novo" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <!-- empresa: diretório do AD com presença -->
+                <ListBox x:Name="ListaEmpresa" Grid.Row="2" Style="{StaticResource Lista}" MouseDoubleClick="Pessoa_DoubleClick" KeyDown="Pessoa_KeyDown"
+                         VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type app:PessoaVM}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid Width="34" Height="34">
+                                    <Border CornerRadius="17" Background="{DynamicResource AccentSoft}">
+                                        <TextBlock Text="{Binding Iniciais}" Foreground="{DynamicResource AccentText}" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Ellipse Width="11" Height="11" HorizontalAlignment="Right" VerticalAlignment="Bottom" Stroke="{DynamicResource BgWindow}" StrokeThickness="2"
+                                             app:Pincel.Recurso="{Binding CorPresenca}" />
+                                </Grid>
+                                <StackPanel Grid.Column="1" Margin="10,0,4,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Detalhe}" Foreground="{DynamicResource TextSecondary}" FontSize="11.5" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding TextoStatus}" Foreground="{DynamicResource TextMuted}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource BtnIcone}" Content="&#xE8BD;" ToolTip="Conversar" Click="PessoaConversar_Click" />
+                                    <Button Style="{StaticResource BtnIcone}" Content="&#xE714;" ToolTip="Chamada de vídeo" Click="PessoaVideo_Click"
+                                            Visibility="{Binding Online, Converter={StaticResource BoolToVis}}" />
+                                    <Button Style="{StaticResource BtnIcone}" Content="&#xE717;" ToolTip="Ligar para o ramal" Click="PessoaLigar_Click" Foreground="{DynamicResource CallGreen}"
+                                            Visibility="{Binding TemRamal, Converter={StaticResource BoolToVis}}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Conversar" Click="MenuPessoaConversar_Click" />
+                            <MenuItem Header="Chamada de vídeo" Click="MenuPessoaVideo_Click" />
+                            <MenuItem Header="Ligar para o ramal" Click="MenuPessoaLigar_Click" />
+                            <MenuItem Header="Copiar ramal" Click="MenuPessoaCopiar_Click" />
+                            <MenuItem Header="Salvar nos meus contatos" Click="MenuPessoaSalvar_Click" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
+                <TextBlock x:Name="TxtSemEmpresa" Grid.Row="2" TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource TextMuted}" Margin="24,40,24,0"
+                           Text="O diretório da empresa aparece quando o Softphone conecta ao servidor do chat." />
+                <!-- meus contatos (locais) -->
+                <ListBox x:Name="ListaContatos" Grid.Row="2" Style="{StaticResource Lista}" ItemTemplate="{StaticResource LinhaContato}"
+                         MouseDoubleClick="Lista_DoubleClick" KeyDown="Lista_KeyDown" Visibility="Collapsed">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Ligar" Click="MenuLigar_Click" />
+                            <MenuItem Header="Copiar número" Click="MenuCopiar_Click" />
+                            <MenuItem Header="Editar" Click="MenuEditarContato_Click" />
+                            <Separator />
+                            <MenuItem Header="Excluir" Click="MenuExcluirContato_Click" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
+                <TextBlock x:Name="TxtSemContatos" Grid.Row="2" Visibility="Collapsed" Text="Nenhum contato. Use &quot;Novo&quot; ou salve a partir dos Recentes." TextWrapping="Wrap" TextAlignment="Center"
+                           Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" Margin="24,40,24,0" />
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

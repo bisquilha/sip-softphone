@@ -1,0 +1,21 @@
+<Window x:Class="Softphone.App.ContatoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Contato" Width="340" SizeToContent="Height" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource BgWindow}" Foreground="{DynamicResource TextPrimary}" FontFamily="Segoe UI" FontSize="13">
+    <StackPanel Margin="18,8,18,16">
+        <TextBlock Style="{StaticResource Rotulo}" Text="Nome" />
+        <TextBox x:Name="CaixaNome" AutomationProperties.Name="Nome" />
+        <TextBlock Style="{StaticResource Rotulo}" Text="Número ou ramal" />
+        <TextBox x:Name="CaixaNumero" AutomationProperties.Name="Número" />
+        <TextBlock Style="{StaticResource Rotulo}" Text="Empresa (opcional; aparece no aviso de chamada)" />
+        <TextBox x:Name="CaixaEmpresa" AutomationProperties.Name="Empresa" />
+        <TextBlock Style="{StaticResource Rotulo}" Text="Setor / filial (opcional)" />
+        <TextBox x:Name="CaixaSetor" AutomationProperties.Name="Setor" />
+        <TextBlock x:Name="TxtErro" Foreground="{DynamicResource BadText}" Margin="0,8,0,0" Visibility="Collapsed" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Style="{StaticResource BtnContorno}" Content="Cancelar" IsCancel="True" Margin="0,0,8,0" />
+            <Button Style="{StaticResource BtnPrimario}" Content="Salvar" IsDefault="True" Click="Salvar_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>
