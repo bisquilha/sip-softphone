@@ -1,6 +1,6 @@
 # SIP Softphone + Collaboration Hub
 
-[![tests](https://github.com/bisquilha/sip-softphone/actions/workflows/tests.yml/badge.svg)](https://github.com/bisquilha/sip-softphone/actions/workflows/tests.yml)
+[![tests](https://github.com/gabrielsilva-it/sip-softphone/actions/workflows/tests.yml/badge.svg)](https://github.com/gabrielsilva-it/sip-softphone/actions/workflows/tests.yml)
 
 A Windows **SIP softphone** built to replace a basic third-party softphone in a multi-site company, plus a small **self-hosted hub** that adds what a plain SIP client lacks: company directory from Active Directory, presence, chat, video meetings and call recordings with AI summaries.
 
