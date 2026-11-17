@@ -8,6 +8,16 @@ Built from scratch and used in production with a hosted PBX. This is a generic, 
 
 ---
 
+## Screenshots
+
+Captured with the app's automated test mode against the simulated PBX (fictitious user and extensions).
+
+<p>
+  <img src="docs/screenshots/discador.png" alt="Dialer" width="260">
+  <img src="docs/screenshots/chamada.png" alt="Call in progress with quality indicator, hold, transfer, consult and record" width="260">
+  <img src="docs/screenshots/atalhos.png" alt="Shortcuts panel: call, chat, presence, link, transfer and DTMF buttons" width="260">
+</p>
+
 ## What it does
 
 **Phone (desktop app)**
