@@ -36,6 +36,49 @@ public sealed partial class Banco
         Exec(c, "UPDATE qualidade SET medido = 0 WHERE medido = 1 AND perda >= 99.9 AND jitter <= 0.001 AND sentido IS NULL");
         CriarTabelaTrechos(c);
         CriarTabelasV13(c);
+        // 1.3.4: reações às mensagens (uma por pessoa por mensagem)
+        Exec(c, """
+            CREATE TABLE IF NOT EXISTS reacoes(
+              mensagem INTEGER NOT NULL, login TEXT NOT NULL COLLATE NOCASE, emoji TEXT NOT NULL, criada_em TEXT NOT NULL,
+              PRIMARY KEY(mensagem, login));
+            """);
+    }
+
+    /// <summary>1.3.4: reage (ou troca a reação) à mensagem; o mesmo emoji de novo, ou emoji vazio, tira a reação. Devolve a mensagem atualizada.</summary>
+    public MensagemDto Reagir(long mensagem, string login, string? emoji)
+    {
+        using var c = Abrir();
+        var atual = Escalar<string>(c, "SELECT emoji FROM reacoes WHERE mensagem=$m AND login=$l", ("$m", mensagem), ("$l", login));
+        if (string.IsNullOrEmpty(emoji) || atual == emoji)
+            Exec(c, "DELETE FROM reacoes WHERE mensagem=$m AND login=$l", ("$m", mensagem), ("$l", login));
+        else
+            Exec(c, "INSERT INTO reacoes(mensagem, login, emoji, criada_em) VALUES($m, $l, $e, $t) ON CONFLICT(mensagem, login) DO UPDATE SET emoji=$e, criada_em=$t",
+                ("$m", mensagem), ("$l", login), ("$e", emoji), ("$t", Agora()));
+        return Mensagem(c, mensagem)!;
+    }
+
+    /// <summary>Emoji aceito como reação: texto curto sem letras, números nem controles (um emoji pode ter vários caracteres: família, bandeira, tom de pele).</summary>
+    public static bool EmojiValido(string? e)
+    {
+        if (string.IsNullOrEmpty(e) || e.Length > 24) return false;
+        foreach (var ch in e)
+            if (char.IsAsciiLetterOrDigit(ch) || char.IsControl(ch) || char.IsWhiteSpace(ch)) return false;
+        return e.Any(ch => ch > 0x7F);
+    }
+
+    private static Dictionary<long, ReacaoDto[]> LerReacoes(SqliteConnection c, IEnumerable<long> ids)
+    {
+        var lista = ids.Distinct().ToList();
+        var r = new Dictionary<long, ReacaoDto[]>();
+        if (lista.Count == 0) return r;
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = $"SELECT mensagem, emoji, login FROM reacoes WHERE mensagem IN ({string.Join(",", lista)}) ORDER BY criada_em, login";
+        var linhas = new List<(long M, string E, string L)>();
+        using (var rd = cmd.ExecuteReader())
+            while (rd.Read()) linhas.Add((rd.GetInt64(0), rd.GetString(1), rd.GetString(2)));
+        foreach (var g in linhas.GroupBy(x => x.M))
+            r[g.Key] = g.GroupBy(x => x.E).Select(e => new ReacaoDto(e.Key, e.Select(x => x.L).ToArray())).ToArray();
+        return r;
     }
 
     // ======================= mensagens (1.1) =======================
@@ -57,6 +100,7 @@ public sealed partial class Banco
                 brutas.Add((r.GetInt64(0), r.GetInt64(1), r.GetString(2), r.GetString(3), S(r, 4), r.GetString(5),
                     r.IsDBNull(6) ? null : r.GetInt64(6), S(r, 7), !r.IsDBNull(8) && r.GetInt64(8) == 1, S(r, 9),
                     S(r, 10), S(r, 11), !r.IsDBNull(12) && r.GetInt64(12) == 1, S(r, 13)));
+        var reacoes = LerReacoes(c, brutas.Where(m => !m.Apag).Select(m => m.Id));
         return brutas.Select(m =>
         {
             string? trecho = null;
@@ -70,7 +114,8 @@ public sealed partial class Banco
             return new MensagemDto(m.Id, m.Conv, m.Autor, m.Apag ? TextoApagada : m.Texto,
                 m.Apag || m.Arq is null ? null : Arquivo(c, m.Arq), Data(m.Em),
                 m.Resp, m.RAutor, trecho, m.Edit is null ? null : Data(m.Edit), m.Apag,
-                string.IsNullOrEmpty(m.Menc) ? null : m.Menc.Split(',', StringSplitOptions.RemoveEmptyEntries));
+                string.IsNullOrEmpty(m.Menc) ? null : m.Menc.Split(',', StringSplitOptions.RemoveEmptyEntries),
+                reacoes.TryGetValue(m.Id, out var rc) ? rc : null);
         }).ToList();
     }
 
@@ -101,6 +146,7 @@ public sealed partial class Banco
         using var c = Abrir();
         var arq = Escalar<string>(c, "SELECT arquivo_id FROM mensagens WHERE id=$i", ("$i", id));
         Exec(c, "UPDATE mensagens SET texto='', arquivo_id=NULL, mencoes=NULL, apagada=1, editada_em=$e WHERE id=$i", ("$e", Agora()), ("$i", id));
+        Exec(c, "DELETE FROM reacoes WHERE mensagem=$i", ("$i", id));
         string? semUso = null;
         if (arq != null && Escalar<long>(c, "SELECT COUNT(*) FROM mensagens WHERE arquivo_id=$a", ("$a", arq)) == 0)
         {

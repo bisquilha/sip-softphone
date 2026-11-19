@@ -70,7 +70,8 @@ public partial class MainWindow : Window
         Loaded += (_, _) => CaixaNumero.Focus();
         SourceInitialized += (_, _) => RegistrarAtalhos();
         // as chamadas ocupam no máximo ~60% da altura; o resto fica para o teclado/abas
-        SizeChanged += (_, _) => RolagemChamadas.MaxHeight = Math.Max(200, ActualHeight * 0.6);
+        // 1.2.10: o teclado precisa manter ~300 px + cabeçalho/abas (~170 px); o que passar disso é dos cartões, que rolam. Em tela baixa (ex.: notebook com 768 px de altura) o teclado não encolhe mais até ficar minúsculo.
+        SizeChanged += (_, _) => RolagemChamadas.MaxHeight = Math.Clamp(ActualHeight - 470, 110, Math.Max(200, ActualHeight * 0.6));
     }
 
     // =================================================================
@@ -80,7 +81,9 @@ public partial class MainWindow : Window
     private void AtualizarStatus(EstadoRegistro estado, string? motivo)
     {
         var conta = App.Config.Conta;
-        string ramal = string.IsNullOrWhiteSpace(conta.Usuario) ? "" : conta.Usuario.Trim();
+        // ramal de USO (o que se disca) quando a conta vem do AD; o login só registra no PABX
+        var cfgApp = App.Config;
+        string ramal = (cfgApp.ContaGerenciadaAd && !string.IsNullOrWhiteSpace(cfgApp.RamalDeUso) ? cfgApp.RamalDeUso : conta.Usuario)?.Trim() ?? "";
         TxtNome.Text = string.IsNullOrWhiteSpace(conta.NomeExibicao) ? (ramal.Length > 0 ? $"Ramal {ramal}" : "Softphone") : conta.NomeExibicao;
         (string texto, string cor) = estado switch
         {

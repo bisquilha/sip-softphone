@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -106,6 +107,11 @@ internal static class ModoTeste
             case "msg":
                 var janela = App.Atual.Chat.JanelasAbertas.FirstOrDefault();
                 if (janela != null) { janela.Caixa.Text = arg; janela.Caixa.RaiseEvent(new System.Windows.Input.KeyEventArgs(System.Windows.Input.Keyboard.PrimaryDevice, PresentationSource.FromVisual(janela)!, 0, System.Windows.Input.Key.Enter) { RoutedEvent = System.Windows.Input.Keyboard.PreviewKeyDownEvent }); }
+                break;
+            // 1.2.11: reage à última mensagem da conversa aberta e abre o seletor de emojis numa janela (para "captura")
+            case "reagir": _ = App.Atual.Chat.JanelasAbertas.FirstOrDefault()?.TesteReagirUltimaAsync(arg); break;
+            case "seletor":
+                new Window { Title = "Seletor", SizeToContent = SizeToContent.WidthAndHeight, Content = new EmojiSeletor(new List<string> { "👍", "🎉" }, true), Left = 40, Top = 40 }.Show();
                 break;
             case "presenca":
                 if (Enum.TryParse<Softphone.Contratos.EstadoPresenca>(arg, out var est)) _ = App.Atual.Chat.EscolherPresencaAsync(est, null);

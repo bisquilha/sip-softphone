@@ -49,6 +49,10 @@ public sealed class ConfigApp
     // ---- aparência ----
     /// <summary>"Sistema" (segue o Windows), "Claro" ou "Escuro".</summary>
     public string Tema { get; set; } = "Sistema";
+    /// <summary>1.2.10: cor (#RRGGBB) do tema "Personalizado", escolhida na tabela de cores.</summary>
+    public string? CorTema { get; set; }
+    /// <summary>1.2.11: últimos emojis usados (reações e mensagens), do mais novo para o mais antigo.</summary>
+    public List<string> EmojisRecentes { get; set; } = new();
     /// <summary>Aviso de chamada no canto de cima (true) ou de baixo (false) da tela.</summary>
     public bool AvisoNoTopo { get; set; }
 

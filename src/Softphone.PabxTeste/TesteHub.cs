@@ -264,6 +264,36 @@ static class TesteHub
         Ok((await c.BuscarAsync("pedido 4521")).Count == 0, "C não acha mensagem de conversa da qual não participa");
         Ok((await b.BuscarAsync("segue o arquivo")).Count == 0, "mensagem apagada não aparece na busca");
 
+        Console.WriteLine("H11b) Reações às mensagens (Hub 1.3.4)");
+        var comReacao = await a.EnviarAsync(conv.Id, "Vou subir o pedido agora");
+        var reac1 = await b.ReagirAsync(comReacao.Id, "👍");
+        Ok(reac1.Reacoes is { Length: 1 } && reac1.Reacoes[0].Emoji == "👍" && reac1.Reacoes[0].Logins.SequenceEqual(new[] { lb }), "B reagiu com 👍");
+        var reac2 = await a.ReagirAsync(comReacao.Id, "👍");
+        Ok(reac2.Reacoes is { Length: 1 } && reac2.Reacoes[0].Logins.Length == 2, "A reagiu com o mesmo emoji: a contagem vira 2");
+        var reac3 = await b.ReagirAsync(comReacao.Id, "🎉");
+        Ok(reac3.Reacoes is { Length: 2 } && reac3.Reacoes.Single(x => x.Emoji == "👍").Logins.Length == 1 && reac3.Reacoes.Single(x => x.Emoji == "🎉").Logins.Single() == lb,
+            "cada pessoa tem uma reação só: B trocou 👍 por 🎉");
+        var reac4 = await b.ReagirAsync(comReacao.Id, "🎉");
+        Ok(reac4.Reacoes is { Length: 1 } && reac4.Reacoes[0].Emoji == "👍", "o mesmo emoji de novo tira a reação");
+        var reac5 = await b.ReagirAsync(comReacao.Id, "🇧🇷");
+        Ok(reac5.Reacoes!.Any(x => x.Emoji == "🇧🇷"), "emoji de vários caracteres (bandeira) vale");
+        var reac6 = await b.ReagirAsync(comReacao.Id, "");
+        Ok(reac6.Reacoes is { Length: 1 } && reac6.Reacoes[0].Logins.Single() == la, "emoji vazio tira a reação de quem pediu");
+        Ok(await Esperar(() => alteradasB.Any(m => m.Id == comReacao.Id && m.Reacoes?.Any(x => x.Emoji == "👍" && x.Logins.Contains(la)) == true)), "B viu a reação da A em tempo real");
+        erro = null;
+        try { await b.ReagirAsync(comReacao.Id, "abc"); } catch (Exception ex) { erro = ex.Message; }
+        Ok(erro != null && erro.Contains("emoji"), "texto comum NÃO vale como reação");
+        erro = null;
+        try { await c.ReagirAsync(comReacao.Id, "👍"); } catch (Exception ex) { erro = ex.Message; }
+        Ok(erro != null, "quem não está na conversa NÃO reage");
+        var histRe = await b.HistoricoAsync(conv.Id);
+        Ok(histRe.Single(m => m.Id == comReacao.Id).Reacoes is { Length: 1 }, "histórico traz as reações");
+        var apagadaComReacao = await a.ApagarMensagemAsync(comReacao.Id);
+        Ok(apagadaComReacao.Reacoes == null, "mensagem apagada perde as reações");
+        erro = null;
+        try { await b.ReagirAsync(comReacao.Id, "👍"); } catch (Exception ex) { erro = ex.Message; }
+        Ok(erro != null && erro.Contains("apagada"), "não reage a mensagem apagada");
+
         Console.WriteLine("H12) Comunicados da TI e painel de administração");
         await using var adm = new HubCliente(url) { LoginTeste = "admin.teste" };
         await adm.IniciarAsync();
@@ -346,7 +376,7 @@ static class TesteHub
             var outro = await web.GetAsync("admin/outro.html");
             Ok((int)trav.StatusCode == 404 && (int)outro.StatusCode == 404, $"nada além dos 3 arquivos ({(int)trav.StatusCode}, {(int)outro.StatusCode})");
             var saude = await web.GetStringAsync("saude");
-            Ok(saude.Contains("\"versao\":\"1.3.3\""), "Hub na versão 1.3.3");
+            Ok(saude.Contains("\"versao\":\"1.3.4\""), "Hub na versão 1.3.4");
         }
 
         // Claude Code, 05/11/2026: achados R03/R08 (token salvo sem identidade, renovação) e R07 (conta desativada no AD)
@@ -363,7 +393,7 @@ static class TesteHub
             var ec = await (await web.PostAsync($"api/entrar-teste?login={lc}", null)).Content.ReadFromJsonAsync<EntrarResposta>();
             var rn = await ComToken(HttpMethod.Post, "api/renovar", ec!.Token);
             var nova = rn.IsSuccessStatusCode ? await rn.Content.ReadFromJsonAsync<EntrarResposta>() : null;
-            Ok(nova?.Eu.Login == lc && nova.VersaoServidor == "1.3.3" && !string.IsNullOrEmpty(nova.Token),
+            Ok(nova?.Eu.Login == lc && nova.VersaoServidor == "1.3.4" && !string.IsNullOrEmpty(nova.Token),
                 $"/api/renovar devolve token novo, quem sou eu e a versão ({(int)rn.StatusCode} {nova?.Eu.Login} {nova?.VersaoServidor})");
             var lixo = await ComToken(HttpMethod.Post, "api/renovar", "nao-e-um-token");
             Ok((int)lixo.StatusCode == 401, $"token inválido não renova ({(int)lixo.StatusCode})");

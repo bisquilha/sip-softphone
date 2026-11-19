@@ -345,6 +345,8 @@ public sealed class HubCliente : IAsyncDisposable
     public Task<MensagemDto> EnviarMensagemAsync(long conversa, string texto, string? arquivoId, long? respostaA, string[]? mencoes) =>
         Con.InvokeAsync<MensagemDto>(HubNomes.EnviarMensagem, new NovaMensagemDto(conversa, texto, arquivoId, respostaA, mencoes));
     public Task<MensagemDto> EditarMensagemAsync(long id, string texto) => Con.InvokeAsync<MensagemDto>(HubNomes.EditarMensagem, id, texto);
+    /// <summary>1.3.4: reage à mensagem com um emoji (o mesmo emoji de novo ou vazio tira a reação). Precisa do Hub 1.3.4.</summary>
+    public Task<MensagemDto> ReagirAsync(long id, string? emoji) => Con.InvokeAsync<MensagemDto>(HubNomes.Reagir, id, emoji ?? "");
     public Task<MensagemDto> ApagarMensagemAsync(long id) => Con.InvokeAsync<MensagemDto>(HubNomes.ApagarMensagem, id);
     public Task<List<ResultadoBuscaDto>> BuscarAsync(string texto) => Con.InvokeAsync<List<ResultadoBuscaDto>>(HubNomes.Buscar, texto);
     public Task InformarClienteAsync(string? versao, string? pc) => Con.InvokeAsync(HubNomes.InformarCliente, versao, pc);

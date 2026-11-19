@@ -281,6 +281,10 @@ public partial class MainWindow
             };
             menu.Items.Add(item);
         }
+        menu.Items.Add(new Separator());
+        var cor = new MenuItem { Header = "Escolher outra cor...", IsChecked = string.Equals(atual, "Personalizado", StringComparison.OrdinalIgnoreCase) };
+        cor.Click += (_, _) => new CorTemaWindow { Owner = this }.ShowDialog();
+        menu.Items.Add(cor);
         menu.IsOpen = true;
     }
 }

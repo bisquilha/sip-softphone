@@ -219,8 +219,65 @@ public partial class ChatWindow : Window
         }
     }
 
+    // ----- 1.2.11: emojis na mensagem e reações -----
+
+    /// <summary>Abre o seletor de emojis; o que for escolhido vai para <paramref name="aoEscolher"/>.</summary>
+    private void AbrirSeletor(FrameworkElement alvo, bool comRapidos, Action<string> aoEscolher)
+    {
+        var popup = new System.Windows.Controls.Primitives.Popup
+        {
+            PlacementTarget = alvo, Placement = System.Windows.Controls.Primitives.PlacementMode.Top, StaysOpen = false, AllowsTransparency = true,
+        };
+        var recentes = App.Atual.Config.EmojisRecentes;
+        var sel = new EmojiSeletor(recentes, comRapidos);
+        sel.Escolhido += e =>
+        {
+            popup.IsOpen = false;
+            EmojiSeletor.LembrarRecente(recentes, e);
+            App.Atual.SalvarConfig();
+            aoEscolher(e);
+        };
+        popup.Child = sel;
+        popup.IsOpen = true;
+    }
+
+    private void Emoji_Click(object sender, RoutedEventArgs e)
+    {
+        AbrirSeletor(BtnEmoji, comRapidos: false, emoji =>
+        {
+            int pos = Caixa.CaretIndex;
+            Caixa.Text = Caixa.Text.Insert(Math.Min(pos, Caixa.Text.Length), emoji);
+            Caixa.CaretIndex = Math.Min(pos + emoji.Length, Caixa.Text.Length);
+            Caixa.Focus();
+        });
+    }
+
+    private void Reagir_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: MensagemVM m } alvo) return;
+        AbrirSeletor(alvo, comRapidos: true, emoji => _ = ReagirAsync(m.Id, emoji));
+    }
+
+    private void Reacao_Click(object sender, MouseButtonEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is ReacaoVM r) _ = ReagirAsync(r.MensagemId, r.Emoji);
+    }
+
+    private async Task ReagirAsync(long mensagem, string emoji)
+    {
+        try { AoAlterar(await _chat.Cliente!.ReagirAsync(mensagem, emoji)); }
+        catch (Exception ex)
+        {
+            var msg = LimparErro(ex);
+            if (msg.Contains("Method does not exist", StringComparison.OrdinalIgnoreCase) || msg.Contains("Reagir", StringComparison.OrdinalIgnoreCase))
+                msg = "O servidor do chat ainda não tem as reações (precisa da versão 1.3.4). Peça para a TI atualizar.";
+            MessageBox.Show(this, "Não foi possível reagir: " + msg, "Softphone");
+        }
+    }
+
     // ----- só para o modo de teste (ModoTeste.cs) -----
     internal void TesteResponderUltima() { if (_msgs.LastOrDefault(m => !m.Minha && m.PodeResponder) is { } m) Responder(m); }
+    internal async Task TesteReagirUltimaAsync(string emoji) { if (_msgs.LastOrDefault(m => m.PodeReagir) is { } m) await ReagirAsync(m.Id, emoji); }
     internal void TesteEditarUltima() { if (_msgs.LastOrDefault(m => m.PodeMudar) is { } m) Editar(m); }
     internal async Task TesteApagarUltimaAsync()
     {

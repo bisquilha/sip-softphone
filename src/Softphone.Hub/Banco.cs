@@ -440,6 +440,7 @@ public sealed partial class Banco
             while (r.Read()) arquivos.Add(r.GetString(0));
         }
         using var tx = c.BeginTransaction();
+        Exec(c, "DELETE FROM reacoes WHERE mensagem IN (SELECT id FROM mensagens WHERE conversa=$c)", ("$c", conversa));
         Exec(c, "DELETE FROM mensagens WHERE conversa=$c", ("$c", conversa));
         Exec(c, "DELETE FROM membros WHERE conversa=$c", ("$c", conversa));
         Exec(c, "DELETE FROM conversas WHERE id=$c", ("$c", conversa));

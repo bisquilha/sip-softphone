@@ -1,7 +1,8 @@
-<Window x:Class="Softphone.App.MainWindow"
+﻿<Window x:Class="Softphone.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:app="clr-namespace:Softphone.App"
+        xmlns:emoji="clr-namespace:Emoji.Wpf;assembly=Emoji.Wpf"
         Title="Softphone" Width="380" Height="660" MinWidth="340" MinHeight="560"
         Background="{DynamicResource BgWindow}" Foreground="{DynamicResource TextPrimary}"
         FontFamily="Segoe UI" FontSize="13" Icon="Assets/softphone.ico"
@@ -603,7 +604,7 @@
                                             </Style>
                                         </TextBlock.Style>
                                     </TextBlock>
-                                    <TextBlock Text="{Binding Previa}" Foreground="{DynamicResource TextSecondary}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    <emoji:TextBlock Text="{Binding Previa}" Foreground="{DynamicResource TextSecondary}" FontSize="12" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
                                     <TextBlock Text="{Binding Hora}" Foreground="{DynamicResource TextMuted}" FontSize="11" HorizontalAlignment="Right" />

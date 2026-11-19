@@ -192,6 +192,19 @@ public sealed class ChatHub : Microsoft.AspNetCore.SignalR.Hub
         return nova;
     }
 
+    /// <summary>1.3.4: reage a uma mensagem da conversa (qualquer emoji). Mesmo emoji de novo, ou vazio, tira a reação. Avisa todos como mensagem alterada.</summary>
+    public async Task<MensagemDto> Reagir(long mensagem, string? emoji)
+    {
+        var msg = _banco.Mensagem(mensagem) ?? throw new HubException("Mensagem não encontrada.");
+        Exigir(msg.Conversa);
+        if (msg.Apagada) throw new HubException("A mensagem foi apagada.");
+        emoji = emoji?.Trim();
+        if (!string.IsNullOrEmpty(emoji) && !Banco.EmojiValido(emoji)) throw new HubException("Escolha um emoji.");
+        var nova = _banco.Reagir(mensagem, Eu, emoji);
+        foreach (var m in _banco.Membros(msg.Conversa)) await Clients.Group(Grupo(m)).SendAsync(HubNomes.EvMensagemAlterada, nova);
+        return nova;
+    }
+
     private MensagemDto MinhaMensagem(long id)
     {
         var msg = _banco.Mensagem(id) ?? throw new HubException("Mensagem não encontrada.");

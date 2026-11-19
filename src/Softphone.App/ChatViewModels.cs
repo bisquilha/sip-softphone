@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Softphone.Contratos;
 
@@ -155,6 +156,13 @@ public sealed class ConversaVM : Observavel
     public void Recalcular() => AvisarTudo();
 }
 
+/// <summary>1.2.11: uma "pílula" de reação embaixo do balão (emoji, quantas pessoas, se eu estou entre elas).</summary>
+public sealed record ReacaoVM(long MensagemId, string Emoji, int Quantidade, bool Minha, string Quem)
+{
+    public string Texto => Quantidade > 1 ? $"{Emoji} {Quantidade}" : Emoji;
+    public string Dica => Quem + " reagiu" + (Minha ? " (clique para tirar)" : "");
+}
+
 /// <summary>Balão de mensagem na janela de conversa.</summary>
 public sealed class MensagemVM : Observavel
 {
@@ -198,6 +206,14 @@ public sealed class MensagemVM : Observavel
     public bool MencionaMe => !Minha && _eu != null && Dto.Mencoes?.Any(m => string.Equals(m, _eu, StringComparison.OrdinalIgnoreCase)) == true;
     public bool PodeMudar => Minha && !Dto.Apagada && !EhReuniao;
     public bool PodeResponder => !Dto.Apagada;
+
+    // ----- 1.2.11: reações -----
+    public bool PodeReagir => !Dto.Apagada;
+    public bool TemReacoes => !Dto.Apagada && Dto.Reacoes is { Length: > 0 };
+    public IReadOnlyList<ReacaoVM> Reacoes => Dto.Apagada || Dto.Reacoes is null ? Array.Empty<ReacaoVM>()
+        : Dto.Reacoes.Select(r => new ReacaoVM(Dto.Id, r.Emoji, r.Logins.Length,
+            _eu != null && r.Logins.Any(l => string.Equals(l, _eu, StringComparison.OrdinalIgnoreCase)),
+            string.Join(", ", r.Logins.Select(l => _eu != null && string.Equals(l, _eu, StringComparison.OrdinalIgnoreCase) ? "você" : _nome(l))))).ToList();
 
     /// <summary>Destaque rápido quando a busca ou a citação leva até esta mensagem.</summary>
     public bool Destacada { get => _destacada; set { if (_destacada != value) { _destacada = value; Avisar(); } } }

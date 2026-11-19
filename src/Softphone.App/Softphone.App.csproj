@@ -13,7 +13,7 @@
     <Product>Softphone</Product>
     <Company>Minha Empresa Industrial</Company>
     <Description>Softphone SIP da empresa</Description>
-    <Version>1.2.9</Version>
+    <Version>1.2.14</Version>
     <ApplicationIcon>Assets\softphone.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -35,6 +35,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+    <!-- 1.2.11: emoji coloridos (o WPF sozinho desenha em preto e branco). Licença WTFPL. -->
+    <PackageReference Include="Emoji.Wpf" Version="0.3.4" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.1" />
   </ItemGroup>

@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:app="clr-namespace:Softphone.App"
+        xmlns:emoji="clr-namespace:Emoji.Wpf;assembly=Emoji.Wpf"
         Width="440" Height="600" MinWidth="340" MinHeight="380"
         Background="{DynamicResource BgWindow}" Foreground="{DynamicResource TextPrimary}"
         FontFamily="Segoe UI" FontSize="13" Icon="Assets/softphone.ico" UseLayoutRounding="True"
@@ -59,13 +60,14 @@
                                 Visibility="{Binding TemCitacao, Converter={StaticResource BoolToVis}}">
                             <StackPanel>
                                 <TextBlock Text="{Binding CitacaoAutor}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentText}" />
-                                <TextBlock Text="{Binding CitacaoTrecho}" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxHeight="34" TextTrimming="CharacterEllipsis" />
+                                <emoji:TextBlock Text="{Binding CitacaoTrecho}" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxHeight="34" TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                         </Border>
-                        <TextBox Text="{Binding Texto, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" Padding="0"
-                                 FontSize="13.5" Visibility="{Binding TemTexto, Converter={StaticResource BoolToVis}}">
-                            <TextBox.Style>
-                                <Style TargetType="TextBox">
+                        <!-- 1.2.11: TextBlock com emoji colorido (Emoji.Wpf); a seleção do texto foi trocada pelo "Copiar texto" do menu do balão -->
+                        <emoji:TextBlock Text="{Binding Texto, Mode=OneWay}" TextWrapping="Wrap" FontSize="13.5"
+                                         Visibility="{Binding TemTexto, Converter={StaticResource BoolToVis}}">
+                            <emoji:TextBlock.Style>
+                                <Style TargetType="emoji:TextBlock">
                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Apagada}" Value="True">
@@ -74,13 +76,8 @@
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </TextBox.Style>
-                            <TextBox.Template>
-                                <ControlTemplate TargetType="TextBox">
-                                    <ScrollViewer x:Name="PART_ContentHost" />
-                                </ControlTemplate>
-                            </TextBox.Template>
-                        </TextBox>
+                            </emoji:TextBlock.Style>
+                        </emoji:TextBlock>
                         <StackPanel Visibility="{Binding EhReuniao, Converter={StaticResource BoolToVis}}" Margin="0,2,0,2">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock FontFamily="{StaticResource Icones}" Text="&#xE714;" Foreground="{DynamicResource AccentText}" FontSize="16" Margin="0,1,8,0" />
@@ -103,7 +100,49 @@
                                 </StackPanel>
                             </StackPanel>
                         </Button>
+                        <!-- 1.2.11: reações (clique na pílula reage com o mesmo emoji ou tira a sua) -->
+                        <ItemsControl ItemsSource="{Binding Reacoes}" Margin="0,4,0,0" Visibility="{Binding TemReacoes, Converter={StaticResource BoolToVis}}" Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type app:ReacaoVM}">
+                                    <Border CornerRadius="11" Padding="7,1" Margin="0,0,4,3" Cursor="Hand" BorderThickness="1" ToolTip="{Binding Dica}" MouseLeftButtonUp="Reacao_Click">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource BgSurfaceAlt}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Minha}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <emoji:TextBlock Text="{Binding Texto}" FontSize="13" Foreground="{DynamicResource TextPrimary}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,2,0,0">
+                            <Button Content="&#xE76E;" FontFamily="{StaticResource Icones}" FontSize="12" Padding="3,1" Margin="0,0,6,0" Cursor="Hand" ToolTip="Reagir"
+                                    Click="Reagir_Click" Visibility="{Binding PodeReagir, Converter={StaticResource BoolToVis}}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" /></ControlTemplate>
+                                </Button.Template>
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+                                        <Setter Property="Opacity" Value="0" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Grid}}" Value="True">
+                                                <Setter Property="Opacity" Value="1" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                             <TextBlock Text="{Binding Hora}" FontSize="10.5" Foreground="{DynamicResource TextMuted}" />
                             <TextBlock Text="{Binding Marca}" FontSize="10.5" Margin="4,0,0,0">
                                 <TextBlock.Style>
@@ -175,7 +214,7 @@
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock x:Name="TxtBarraTitulo" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentText}" />
-                        <TextBlock x:Name="TxtBarraTrecho" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" />
+                        <emoji:TextBlock x:Name="TxtBarraTrecho" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                     <Button Grid.Column="1" Style="{StaticResource BtnIcone}" Content="&#xE711;" ToolTip="Cancelar (Esc)" Click="CancelarBarra_Click" VerticalAlignment="Center" />
                 </Grid>
@@ -207,6 +246,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
                     <Button Style="{StaticResource BtnIcone}" Content="&#xE723;" ToolTip="Enviar arquivo (ou arraste para a janela)" Click="Anexar_Click" />
+                    <Button x:Name="BtnEmoji" Style="{StaticResource BtnIcone}" Content="&#xE76E;" ToolTip="Emojis" Click="Emoji_Click" />
                 </StackPanel>
                 <TextBox x:Name="Caixa" Grid.Column="1" Margin="4,0" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="120" VerticalScrollBarVisibility="Auto"
                          PreviewKeyDown="Caixa_PreviewKeyDown" TextChanged="Caixa_TextChanged" AutomationProperties.Name="Mensagem" />

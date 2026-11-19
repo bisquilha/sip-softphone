@@ -40,7 +40,11 @@ public sealed record MensagemDto(
     string? RespostaTrecho = null,
     DateTime? EditadaEm = null,
     bool Apagada = false,
-    string[]? Mencoes = null);
+    string[]? Mencoes = null,
+    ReacaoDto[]? Reacoes = null);
+
+/// <summary>1.3.4: uma reação (emoji) a uma mensagem e quem reagiu com ela. Cada pessoa tem no máximo uma reação por mensagem.</summary>
+public sealed record ReacaoDto(string Emoji, string[] Logins);
 
 /// <summary>Mensagem nova com os recursos da 1.1 (citar e marcar pessoas).</summary>
 public sealed record NovaMensagemDto(long Conversa, string Texto, string? ArquivoId, long? RespostaA, string[]? Mencoes);
@@ -292,6 +296,7 @@ public static class HubNomes
     // 1.1
     public const string EnviarMensagem = "EnviarMensagem";    // (NovaMensagemDto) -> MensagemDto (com citação e @menções)
     public const string EditarMensagem = "EditarMensagem";    // (id, texto) -> MensagemDto (só o autor)
+    public const string Reagir = "Reagir";                    // (id, emoji ou vazio) -> MensagemDto (1.3.4; qualquer membro da conversa)
     public const string ApagarMensagem = "ApagarMensagem";    // (id) -> MensagemDto (só o autor; fica "mensagem apagada")
     public const string Buscar = "Buscar";                    // (texto) -> ResultadoBuscaDto[] (só nas minhas conversas)
     public const string InformarCliente = "InformarCliente";  // (versao, pc) para o painel da TI

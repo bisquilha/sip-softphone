@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 
-const string Versao = "1.3.3";
+const string Versao = "1.3.4";
 var builder = WebApplication.CreateBuilder(args);
 
 var op = new OpcoesHub();

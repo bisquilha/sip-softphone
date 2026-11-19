@@ -295,6 +295,7 @@
                             <ComboBoxItem Content="Vinho (vinho para preto)" Tag="Vinho" />
                             <ComboBoxItem Content="Roxo (roxo para preto)" Tag="Roxo" />
                             <ComboBoxItem Content="Âmbar (laranja para preto)" Tag="Ambar" />
+                            <ComboBoxItem Content="Cor personalizada (tabela de cores)" Tag="Personalizado" />
                         </ComboBox>
                         <CheckBox x:Name="ChkIniciar" Content="Iniciar com o Windows (fica na bandeja)" Margin="0,14,0,0" />
                         <CheckBox x:Name="ChkAtalhos" Content="Atalhos em qualquer janela (você pode trocar cada um abaixo)" />

@@ -26,11 +26,12 @@ Captured with the app's automated test mode against the simulated PBX (fictitiou
 - Live call quality score (**MOS** estimate) on the call card
 - Click-to-call: registers `tel:`, `sip:` and `callto:` links for the user
 - Call recording to stereo WAV (me / the other side), optional automatic recording
-- Shortcuts panel (call, chat, transfer, DTMF, links), themes, ring and key sounds, start with Windows, self-update
+- Shortcuts panel (call, chat, transfer, DTMF, links), themes (including a custom accent colour), ring and key sounds, start with Windows, self-update
+- Chat window with a full emoji picker and **emoji reactions** on messages (one per person, as in common messengers), drawn in colour with Emoji.Wpf
 
 **Hub (server)**
 - **Directory** synced from Active Directory every 30 minutes; caller identification by extension
-- **Presence** (online, away, on a call, do not disturb) and **chat** over SignalR: read receipts, typing, files and screenshots, quotes, edit/delete, mentions, search
+- **Presence** (online, away, on a call, do not disturb) and **chat** over SignalR: read receipts, typing, files and screenshots, quotes, edit/delete, mentions, reactions, search
 - **Single sign-on** with Kerberos (Negotiate), or LDAPS bind as a fallback; account disabled in AD loses access
 - **Video meetings** with self-hosted **Jitsi**, using short-lived JWTs issued by the hub (only conversation members can join)
 - **Recordings:** local transcription with a **Whisper** container (audio never leaves the network) and summaries/next steps by a configurable AI provider list (Anthropic, OpenAI, Gemini, xAI, DeepSeek or any compatible endpoint), with fallback order and retention policy
@@ -86,7 +87,7 @@ Requirements: .NET 8 SDK, Windows (WPF, WinMM audio). The hub runs on Linux in D
 
 ## Tech
 
-C# / .NET 8 · WPF · SIPSorcery · NAudio · WebRTC APM · ASP.NET Core · SignalR · SQLite · Kerberos / LDAPS · Docker · nginx · Jitsi Meet (JWT) · Whisper ASR · Anthropic / OpenAI-compatible APIs · Inno Setup
+C# / .NET 8 · WPF · SIPSorcery · NAudio · WebRTC APM · Emoji.Wpf · ASP.NET Core · SignalR · SQLite · Kerberos / LDAPS · Docker · nginx · Jitsi Meet (JWT) · Whisper ASR · Anthropic / OpenAI-compatible APIs · Inno Setup
 
 ---
 

@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using Microsoft.Win32;
 
 namespace Softphone.App;
@@ -44,7 +45,7 @@ internal static class Theme
         Application.Current?.Dispatcher.BeginInvoke(() => Apply(Resolver()));
     }
 
-    private static string? Conhecido(string? id) => Disponiveis.FirstOrDefault(t => t.Id != "Sistema" && string.Equals(t.Id, id?.Trim(), StringComparison.OrdinalIgnoreCase))?.Id;
+    private static string? Conhecido(string? id) => string.Equals(id?.Trim(), "Personalizado", StringComparison.OrdinalIgnoreCase) ? "Personalizado" : Disponiveis.FirstOrDefault(t => t.Id != "Sistema" && string.Equals(t.Id, id?.Trim(), StringComparison.OrdinalIgnoreCase))?.Id;
 
     private static string Resolver()
     {
@@ -66,12 +67,39 @@ internal static class Theme
     {
         var dictionaries = Application.Current.Resources.MergedDictionaries;
         var arquivo = id switch { "Claro" => "Light", "Escuro" => "Dark", _ => id };   // os dois primeiros mantêm os nomes antigos dos arquivos
+        if (id == "Personalizado") arquivo = "Oliva";   // base: paleta escura; as cores de destaque são trocadas pela cor escolhida
         var uri = new Uri($"pack://application:,,,/Themes/{arquivo}.xaml", UriKind.Absolute);
-        if (dictionaries.Count > 0) dictionaries[0] = new ResourceDictionary { Source = uri };
-        else dictionaries.Add(new ResourceDictionary { Source = uri });
+        var dic = new ResourceDictionary { Source = uri };
+        if (id == "Personalizado") AplicarCorPersonalizada(dic);
+        if (dictionaries.Count > 0) dictionaries[0] = dic;
+        else dictionaries.Add(dic);
         Atual = id;
         IsLight = id == "Claro";
         Changed?.Invoke();
+    }
+
+    /// <summary>1.2.10: gera as cores do tema "Personalizado" a partir da cor escolhida (matiz da cor + fundos escuros).</summary>
+    private static void AplicarCorPersonalizada(ResourceDictionary d)
+    {
+        var cfg = (Application.Current as App)?.Config;
+        if (!CorTemaWindow.TentarCor(cfg?.CorTema, out var escolhida)) return;
+        var (h, s, l) = CorTemaWindow.ParaHsl(escolhida);
+        double sf = Math.Min(s, 0.45);          // fundos: pouca saturação
+        double sa = Math.Min(s, 0.85);
+        double la = Math.Clamp(l, 0.30, 0.46);  // destaque com contraste para texto branco
+        Color C(double sat, double lum) => CorTemaWindow.DeHsl(h, s < 0.05 ? 0 : sat, lum);
+        void P(string k, Color c) => d[k] = new SolidColorBrush(c);
+        P("BgWindow", C(sf, 0.06)); P("BgSurface", C(sf, 0.10)); P("BgSurfaceAlt", C(sf, 0.08));
+        P("BgHover", C(sf, 0.14)); P("BgPressed", C(sf, 0.18)); P("BorderSubtle", C(sf, 0.22));
+        P("Accent", C(sa, la)); P("AccentHover", C(sa, la + 0.06));
+        P("AccentText", C(Math.Min(sa, 0.7), 0.72)); P("AccentSoft", C(sf, 0.15));
+        P("HeaderBg", C(Math.Min(sa, 0.7), 0.12)); P("HeaderButtonHover", C(Math.Min(sa, 0.7), 0.2));
+        P("CallCardBg", C(sf, 0.11)); P("CallCardBorder", C(sa, 0.28)); P("FocusRing", C(Math.Min(sa, 0.7), 0.72));
+        d["DialerBg"] = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0), EndPoint = new Point(0, 1),
+            GradientStops = { new GradientStop(C(sa, la), 0), new GradientStop(C(sa, 0.17), 0.55), new GradientStop(Colors.Black, 1) },
+        };
     }
 
     [DllImport("dwmapi.dll")]
